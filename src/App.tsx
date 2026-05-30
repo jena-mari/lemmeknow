@@ -8,6 +8,7 @@ import CircleManagement from './components/CircleManagement';
 import CheckInForm from './components/CheckInForm';
 import TrustedCircleFeed from './components/TrustedCircleFeed';
 import OnboardingFlow from './components/OnboardingFlow';
+import SafetyScreen from './components/SafetyScreen';
 
 type Tab = 'camera' | 'updates' | 'circle' | 'more';
 
@@ -131,6 +132,7 @@ export default function App() {
         {activeTab === 'updates' && (
           <TrustedCircleFeed
             userCheckIns={updates}
+            contacts={contacts}
             onOpenCamera={() => setActiveTab('camera')}
             onDeleteUpdate={handleDeleteUpdate}
           />
@@ -209,6 +211,11 @@ export default function App() {
                 </div>
               )}
             </section>
+
+            <SafetyScreen
+              updates={updates}
+              onOpenUpdates={() => setActiveTab('updates')}
+            />
             </div>
           </div>
         )}

@@ -85,13 +85,13 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   };
 
   return (
-    <div className="lmk-sky-page flex h-full flex-col px-5 py-6">
-      <div className="relative z-20 mb-4 grid grid-cols-[44px_1fr_44px] items-center">
+    <div className="lmk-sky-page flex h-full flex-col px-5 py-5">
+      <div className="relative z-20 mb-2 grid grid-cols-[44px_1fr_44px] items-center">
         {step !== 'welcome' ? (
           <button
             type="button"
             onClick={goBack}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/82 text-brand-black shadow-sm backdrop-blur"
+            className="lmk-tap flex h-10 w-10 items-center justify-center rounded-full bg-white/82 text-brand-black shadow-sm backdrop-blur"
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5 stroke-[2.4]" />
@@ -113,23 +113,23 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       </div>
 
       {step === 'welcome' && (
-        <section className="relative z-10 -mx-5 -my-6 flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#cce6fc] px-6 pb-[210px] pt-10 text-center">
-          <div className="lmk-shell">
-            <div className="mb-10 flex justify-center text-brand-black">
-              <Cloud className="h-16 w-24 stroke-[2.6]" />
+        <section className="relative z-10 -mx-5 -mb-5 flex flex-1 flex-col items-center justify-center overflow-hidden px-6 pb-[202px] pt-3 text-center">
+          <div className="lmk-shell -translate-y-2">
+            <div className="mb-7 flex justify-center text-brand-black">
+              <Cloud className="h-[60px] w-24 stroke-[2.55]" />
             </div>
-            <h1 className="mx-auto max-w-[340px] text-[48px] font-normal leading-[0.84] text-black">
+            <h1 className="mx-auto max-w-[340px] text-[46px] font-normal leading-[0.86] text-black">
               <span className="font-black">Lemme</span>know
               <br />
               you&apos;re safe.
             </h1>
-            <p className="mx-auto mt-7 max-w-[310px] text-[19px] font-medium text-black">
-              Private updates your circle can review if you go missing.
+            <p className="mx-auto mt-5 max-w-[300px] text-[18px] font-medium text-black">
+              Private updates your close circle can review when it matters.
             </p>
             <button
               type="button"
               onClick={() => setStep('username')}
-              className="lmk-primary mt-9 h-[68px] w-full max-w-[360px] bg-yellow-orange text-[20px] font-medium text-black"
+              className="lmk-primary mt-7 h-[66px] w-full max-w-[350px] bg-yellow-orange text-[20px] font-medium text-black"
             >
               Get Started
             </button>
@@ -143,15 +143,15 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       )}
 
       {step === 'username' && (
-        <section className="relative z-10 -mx-5 -mb-6 flex flex-1 flex-col items-center justify-center overflow-hidden px-6 pb-[180px] pt-3 text-center">
-          <div className="lmk-shell">
-            <Cloud className="mx-auto mb-8 h-14 w-[88px] stroke-[2.45] text-brand-black" />
-            <h1 className="text-[40px] font-black text-brand-black">Choose a username</h1>
-            <p className="mx-auto mt-3 max-w-[280px] text-[16px] font-medium text-brand-black">
-              Keep it simple. You can change it later.
+        <section className="relative z-10 -mx-5 -mb-5 flex flex-1 flex-col items-center justify-center overflow-hidden px-6 pb-[162px] pt-2 text-center">
+          <div className="lmk-shell lmk-panel px-5 py-6">
+            <Cloud className="mx-auto mb-5 h-12 w-[78px] stroke-[2.45] text-brand-black" />
+            <h1 className="text-[36px] font-black text-brand-black">Choose a username</h1>
+            <p className="mx-auto mt-2 max-w-[260px] text-[15px] font-medium text-brand-black">
+              Keep it simple. Your circle will see this.
             </p>
 
-            <label className="mt-8 block text-[12px] font-black uppercase text-brand-black/65">Username</label>
+            <label className="mt-6 block text-[11px] font-black uppercase text-brand-black/58">Username</label>
             <div className="mt-2 flex items-center gap-2 rounded-[28px] border border-white/80 bg-white/78 px-5 py-4 text-left shadow-sm backdrop-blur">
               <span className="font-black text-brand-black/60">@</span>
               <input
@@ -166,7 +166,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <button
               type="button"
               onClick={() => setStep('people')}
-              className="lmk-primary mt-7 h-[64px] w-full bg-yellow-orange text-[19px] font-medium text-black"
+              className="lmk-primary mt-5 h-[62px] w-full bg-yellow-orange text-[19px] font-medium text-black"
             >
               Next
             </button>
@@ -180,15 +180,15 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       )}
 
       {step === 'people' && (
-        <section className="relative z-10 -mx-5 -mb-6 flex flex-1 flex-col items-center justify-center overflow-hidden px-6 pb-[126px] pt-1 text-center">
-          <div className="lmk-shell">
-            <Cloud className="mx-auto mb-5 h-10 w-16 stroke-[2.45] text-brand-black" />
-            <h1 className="text-[38px] font-black text-brand-black">Add your people</h1>
-            <p className="mx-auto mt-2 max-w-[280px] text-[15px] font-medium text-brand-black">
-              Pick who can review your Updates, Recap, notes, and last location.
+        <section className="relative z-10 -mx-5 -mb-5 flex flex-1 flex-col items-center justify-center overflow-hidden px-6 pb-[112px] pt-1 text-center">
+          <div className="lmk-shell lmk-panel px-4 py-5">
+            <Cloud className="mx-auto mb-3 h-9 w-16 stroke-[2.45] text-brand-black" />
+            <h1 className="text-[34px] font-black text-brand-black">Add your people</h1>
+            <p className="mx-auto mt-2 max-w-[280px] text-[14px] font-medium text-brand-black">
+              Pick who can review your private updates and recap.
             </p>
 
-            <div className="my-5 grid grid-cols-3 gap-2">
+            <div className="my-4 grid grid-cols-3 gap-2">
               {sourceOptions.map((source) => {
                 const Icon = source.icon;
                 const active = selectedSources.includes(source.id);
@@ -240,7 +240,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <button
               type="button"
               onClick={finish}
-              className="lmk-primary mt-6 h-[62px] w-full bg-yellow-orange text-[19px] font-medium text-black"
+              className="lmk-primary mt-5 h-[60px] w-full bg-yellow-orange text-[19px] font-medium text-black"
             >
               Next
             </button>

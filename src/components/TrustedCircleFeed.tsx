@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckIn, MockUpdate } from '../types';
+import { CheckIn, Contact, MockUpdate } from '../types';
 import { MOCK_FRIENDS_UPDATES } from '../data/mockData';
+import InstantsGrid from './InstantsGrid';
 import {
   CalendarDays,
   Camera,
@@ -16,6 +17,7 @@ import {
 
 interface TrustedCircleFeedProps {
   userCheckIns: CheckIn[];
+  contacts?: Contact[];
   friendsUpdates?: MockUpdate[];
   onOpenCamera: () => void;
   onDeleteUpdate: (id: string) => void;
@@ -65,6 +67,7 @@ type FriendRecapEntry = {
 
 export default function TrustedCircleFeed({
   userCheckIns,
+  contacts = [],
   friendsUpdates = MOCK_FRIENDS_UPDATES,
   onOpenCamera,
   onDeleteUpdate,
@@ -437,6 +440,16 @@ export default function TrustedCircleFeed({
           ))}
         </div>
       </section>
+
+      {userCheckIns.length > 0 && (
+        <section className="lmk-panel relative z-10 mt-3 p-4">
+          <InstantsGrid
+            checkIns={userCheckIns}
+            contacts={contacts}
+            title="Your photo review"
+          />
+        </section>
+      )}
       </div>
     </div>
   );
