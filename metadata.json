@@ -1,0 +1,6 @@
+{
+  "name": "LEMMEKNOW Safety Check-In",
+  "description": "Private safety check-in app for sharing timed updates, location context, and travel notes with a trusted circle.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
