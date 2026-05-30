@@ -38,7 +38,7 @@ export const MOCK_FRIENDS_UPDATES: MockUpdate[] = [
     landmark: 'The Ritz Cocktail Bar',
     note: 'walking with Sarah now, tiny night-out update',
     photoUrl: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=400&q=80',
-    status: 'safe'
+    status: 'fresh'
   },
   {
     id: 'u2',
@@ -51,29 +51,6 @@ export const MOCK_FRIENDS_UPDATES: MockUpdate[] = [
     note: 'Boarded the South Coast line train. Reading a book, phone is on 82%. See you guys soon!',
     photoUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=400&q=80',
     transportText: 'Train Line T4, Carriage 2390',
-    status: 'safe'
-  }
-];
-
-export const CALMING_MOCK_PHOTOS = [
-  {
-    name: 'Uber Passenger Seat',
-    url: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=500&q=80',
-    tag: 'Rideshare'
-  },
-  {
-    name: 'Wollongong Station Platform',
-    url: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=500&q=80',
-    tag: 'Travelling'
-  },
-  {
-    name: 'Cozy Crown Street Cafe',
-    url: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=500&q=80',
-    tag: 'Night Out / Dinner'
-  },
-  {
-    name: 'Quiet Evening Sidewalk',
-    url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=500&q=80',
-    tag: 'Walking'
+    status: 'seen'
   }
 ];

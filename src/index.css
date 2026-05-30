@@ -1,40 +1,81 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: "Alte Haas Grotesk";
-  src: url("./public/AlteHaasGroteskRegular.ttf") format("truetype");
+  font-family: "Nohemi";
+  src: url("./public/Nohemi-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Alte Haas Grotesk";
-  src: url("./public/AlteHaasGroteskBold.ttf") format("truetype");
-  font-weight: 700 900;
+  font-family: "Nohemi";
+  src: url("./public/Nohemi-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nohemi";
+  src: url("./public/Nohemi-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nohemi";
+  src: url("./public/Nohemi-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nohemi";
+  src: url("./public/Nohemi-Black.otf") format("opentype");
+  font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
 
 @theme {
-  --font-serif: "Alte Haas Grotesk", system-ui, -apple-system, sans-serif;
-  --font-sans: "Alte Haas Grotesk", system-ui, -apple-system, sans-serif;
-  --font-mono: "Alte Haas Grotesk", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Nohemi", system-ui, -apple-system, sans-serif;
+  --font-sans: "Nohemi", system-ui, -apple-system, sans-serif;
+  --font-mono: "Nohemi", ui-monospace, SFMono-Regular, monospace;
   
   --color-azure: #cce6fc;
   --color-yellow-orange: #f9c94e;
-  --color-cloud: #f7f2e8;
   --color-pink-accent: #f2c0ca;
+  --color-light-green: #d8f3dc;
   --color-forest: #124224;
+  --color-brand-black: #050505;
 }
 
 body {
-  background-color: #f7f2e8;
-  color: #124224;
+  background-color: #ffffff;
+  color: #050505;
   font-family: var(--font-sans);
+  line-height: 1.12;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
+}
+
+* {
+  letter-spacing: 0 !important;
+}
+
+p {
+  line-height: 1.22;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 0.96;
 }
 
 /* Standard iOS App Layout utilities */
@@ -48,4 +89,88 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.lmk-sky-page {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.5), transparent 28%),
+    linear-gradient(180deg, #cce6fc 0%, #d9eefc 68%, #eef8ee 100%);
+}
+
+.lmk-sky-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.48) 0 11%, transparent 12% 100%),
+    linear-gradient(18deg, transparent 0 44%, rgba(255, 255, 255, 0.42) 45% 52%, transparent 53% 100%),
+    linear-gradient(165deg, transparent 0 62%, rgba(255, 255, 255, 0.36) 63% 70%, transparent 71% 100%);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.lmk-sky-page::after {
+  display: none;
+}
+
+.lmk-glass {
+  background: rgba(255, 255, 255, 0.64);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16px 42px rgba(18, 66, 36, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.lmk-page {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(255, 255, 255, 0.72), transparent 30%),
+    linear-gradient(180deg, #cce6fc 0%, #e6f4ff 58%, #f4fbf1 100%);
+}
+
+.lmk-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.42) 0 10%, transparent 11% 100%),
+    linear-gradient(24deg, transparent 0 48%, rgba(255, 255, 255, 0.34) 49% 56%, transparent 57% 100%);
+  pointer-events: none;
+}
+
+.lmk-page::after {
+  content: "";
+  position: absolute;
+  inset: auto -18% -84px -18%;
+  height: 170px;
+  border-radius: 50% 50% 0 0;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.28), transparent 30%),
+    linear-gradient(180deg, rgba(216, 243, 220, 0.76), rgba(18, 66, 36, 0.18));
+  filter: blur(0.2px);
+  pointer-events: none;
+}
+
+.lmk-panel {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 36px;
+  box-shadow: 0 18px 42px rgba(18, 66, 36, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.lmk-shell {
+  position: relative;
+  z-index: 1;
+  margin-inline: auto;
+  width: 100%;
+  max-width: 390px;
+}
+
+.lmk-primary {
+  border-radius: 9999px;
+  box-shadow: 0 12px 26px rgba(18, 66, 36, 0.12);
 }

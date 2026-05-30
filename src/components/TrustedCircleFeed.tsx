@@ -1,264 +1,442 @@
-import React from 'react';
-import { CheckIn, MockUpdate, SafetySession, EscalationState } from '../types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { CheckIn, MockUpdate } from '../types';
 import { MOCK_FRIENDS_UPDATES } from '../data/mockData';
-import { MapPin, MessageCircle, Heart, Eye, FlameKindling, Info, Sparkles } from 'lucide-react';
+import {
+  CalendarDays,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Sparkles,
+  Trash2,
+  Users,
+} from 'lucide-react';
 
 interface TrustedCircleFeedProps {
   userCheckIns: CheckIn[];
   friendsUpdates?: MockUpdate[];
-  activeSession: SafetySession | null;
-  escalationState: EscalationState;
-  onOpenEmergencyCard: () => void;
-  onSendNudge?: () => void;
+  onOpenCamera: () => void;
+  onDeleteUpdate: (id: string) => void;
 }
+
+type CircleUpdate = {
+  id: string;
+  name: string;
+  initials: string;
+  color: string;
+  time: string;
+  photoUrl: string;
+  note: string;
+  landmark: string;
+  tag?: string;
+  detail?: string;
+  mine?: boolean;
+  timestamp?: string;
+  dayKey?: string;
+};
+
+type FriendRecap = {
+  name: string;
+  initials: string;
+  color: string;
+  updateCount: number;
+  places: string[];
+  notes: string[];
+  latestTime: string;
+};
 
 export default function TrustedCircleFeed({
   userCheckIns,
   friendsUpdates = MOCK_FRIENDS_UPDATES,
-  activeSession,
-  escalationState,
-  onOpenEmergencyCard,
-  onSendNudge
+  onOpenCamera,
+  onDeleteUpdate,
 }: TrustedCircleFeedProps) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeRecapIndex, setActiveRecapIndex] = useState(0);
 
-  // Helper formatting for dates/times
-  const formatTimeAgo = (isoString: string) => {
-    try {
-      const now = new Date();
-      const past = new Date(isoString);
-      const diffMs = now.getTime() - past.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      const diffHours = Math.floor(diffMins / 60);
-      return `${diffHours}h ago`;
-    } catch {
-      return 'Recently';
+  const updates = useMemo<CircleUpdate[]>(() => {
+    const mine = userCheckIns.map((update) => ({
+      id: update.id,
+      name: 'You',
+      initials: 'ME',
+      color: 'bg-yellow-orange text-brand-black',
+      time: formatTimeAgo(update.timestamp),
+      photoUrl: update.photoUrl,
+      note: update.note,
+      landmark: update.landmark,
+      tag: update.transportDetails?.model,
+      detail: update.transportDetails?.plates,
+      mine: true,
+      timestamp: update.timestamp,
+      dayKey: getDayKey(update.timestamp),
+    }));
+
+    const friends = friendsUpdates.map((friend) => ({
+      id: friend.id,
+      name: friend.friendName.split(' ')[0],
+      initials: friend.friendInitials,
+      color: friend.friendColor,
+      time: friend.timeAgo,
+      photoUrl: friend.photoUrl,
+      note: friend.note,
+      landmark: friend.landmark,
+      tag: friend.reason,
+      detail: friend.transportText,
+      mine: false,
+    }));
+
+    return [...mine, ...friends];
+  }, [friendsUpdates, userCheckIns]);
+
+  const myUpdates = useMemo(
+    () => updates.filter((update) => update.mine && update.timestamp),
+    [updates]
+  );
+  const todayKey = getDayKey(new Date().toISOString());
+  const todayUpdates = myUpdates.filter((update) => update.dayKey === todayKey);
+  const archiveDays = useMemo(() => buildArchiveDays(myUpdates), [myUpdates]);
+  const friendRecaps = useMemo(() => buildFriendRecaps(friendsUpdates), [friendsUpdates]);
+  const activeRecap = friendRecaps[Math.min(activeRecapIndex, friendRecaps.length - 1)];
+  const active = updates[Math.min(activeIndex, updates.length - 1)];
+
+  useEffect(() => {
+    if (activeIndex > 0 && activeIndex >= updates.length) {
+      setActiveIndex(updates.length - 1);
     }
+  }, [activeIndex, updates.length]);
+
+  useEffect(() => {
+    if (activeRecapIndex > 0 && activeRecapIndex >= friendRecaps.length) {
+      setActiveRecapIndex(friendRecaps.length - 1);
+    }
+  }, [activeRecapIndex, friendRecaps.length]);
+
+  const move = (direction: 1 | -1) => {
+    setActiveIndex((current) => {
+      const next = current + direction;
+      if (next < 0) return updates.length - 1;
+      if (next >= updates.length) return 0;
+      return next;
+    });
   };
 
+  const openDay = (dayKey: string) => {
+    const index = updates.findIndex((update) => update.mine && update.dayKey === dayKey);
+    if (index >= 0) setActiveIndex(index);
+  };
+
+  const deleteActive = () => {
+    if (!active?.mine) return;
+    onDeleteUpdate(active.id);
+    setActiveIndex((current) => Math.max(0, current - 1));
+  };
+
+  if (!active) {
+    return (
+      <div className="lmk-page -mx-4 -my-4 flex min-h-full flex-col justify-center px-6 text-center">
+        <div className="relative z-10 mx-auto mb-5 flex h-16 w-20 items-center justify-center rounded-full bg-yellow-orange text-brand-black shadow-sm">
+          <Camera className="h-7 w-7" />
+        </div>
+        <h2 className="relative z-10 text-[34px] font-black text-brand-black">No updates yet</h2>
+        <p className="relative z-10 mt-3 text-[15px] font-medium text-brand-black">
+          Snap the first tiny update for your circle.
+        </p>
+        <button
+          type="button"
+          onClick={onOpenCamera}
+          className="lmk-primary relative z-10 mt-7 h-[60px] bg-yellow-orange px-5 text-[18px] font-medium text-black"
+        >
+          open camera
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4" id="trusted-circle-feed">
-      {/* Feed Filter title */}
-      <div className="flex items-center justify-between px-1">
-        <h3 className="font-serif text-lg font-bold text-forest">Circle Board</h3>
-        <span className="text-[10px] text-forest/60 font-mono flex items-center gap-1 bg-white px-2 py-0.5 rounded-full border border-forest/5">
-          <Eye className="w-3 h-3 text-forest/40" />
-          <span>Shared with your 3 trusted contacts</span>
-        </span>
+    <div className="lmk-page -mx-4 -my-4 min-h-full overflow-hidden px-4 py-5 pb-10 text-center" id="updates-viewer">
+      <div className="lmk-shell">
+      <div className="relative z-10 mb-4 flex flex-col items-center">
+        <h2 className="text-[34px] font-black text-brand-black">Updates</h2>
+        <p className="mt-1 text-[13px] font-medium text-brand-black">tap through your close circle</p>
+        <button
+          type="button"
+          onClick={onOpenCamera}
+          className="mt-3 flex h-11 w-14 items-center justify-center rounded-full bg-yellow-orange text-brand-black shadow-sm"
+          aria-label="Open camera"
+        >
+          <Camera className="h-5 w-5" />
+        </button>
       </div>
 
-      {/* Gentle quiet-state panel for optional timers */}
-      {activeSession && escalationState !== 'SAFE' && (
-        <div className="p-4 bg-pink-accent/25 border-2 border-pink-accent rounded-3xl space-y-3 text-left animate-fadeIn shadow-2sm" id="escalation-alert-box">
-          <div className="flex items-start gap-2.5">
-            <div className="p-1 rounded-lg bg-pink-accent text-forest mt-0.5 shrink-0">
-              <Sparkles className="w-4 h-4 text-forest" />
+      <div className="relative z-10 mb-3 flex gap-1.5">
+        {updates.map((update, index) => (
+          <button
+            key={update.id}
+            type="button"
+            onClick={() => setActiveIndex(index)}
+            className={`h-1.5 flex-1 rounded-full ${index <= activeIndex ? 'bg-brand-black' : 'bg-white/70'}`}
+            aria-label={`Open ${update.name} update`}
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 mb-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        {updates.map((update, index) => (
+          <button
+            key={update.id}
+            type="button"
+            onClick={() => setActiveIndex(index)}
+            className="flex flex-none flex-col items-center gap-1"
+          >
+            <span className={`flex h-12 w-12 items-center justify-center rounded-full border-2 ${
+              index === activeIndex ? 'border-brand-black' : 'border-white'
+            } ${update.color} text-xs font-black shadow-sm`}>
+              {update.initials}
+            </span>
+            <span className="max-w-14 truncate text-[9px] font-bold text-brand-black/72">{update.name}</span>
+          </button>
+        ))}
+      </div>
+
+      <section className="lmk-panel relative z-10 overflow-hidden p-2">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-[28px] bg-brand-black text-left">
+          <img
+            src={active.photoUrl}
+            alt={`${active.name} update`}
+            className="h-full w-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4 text-white">
+            <div className="flex items-center gap-2">
+              <span className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-black ${active.color}`}>
+                {active.initials}
+              </span>
+              <div>
+                <div className="text-sm font-black leading-none">{active.name}</div>
+                <div className="mt-0.5 text-[10px] font-bold text-white/70">{active.time}</div>
+              </div>
             </div>
-            <div className="space-y-1">
-              <h4 className="text-xs font-bold text-forest uppercase tracking-wider">
-                Quiet for now
-              </h4>
-              <p className="text-[11px] text-[#2c0e13] leading-relaxed">
-                {escalationState === 'REMINDER_SENT' && "LMK sent a little reminder to post when you feel like it."}
-                {escalationState === 'CIRCLE_NOTIFIED' && "Your circle sees your latest shared update and can send a small nudge."}
-                {escalationState === 'ESCALATED' && "Your latest shared context is pinned so your circle does not need to scroll."}
-              </p>
+            <div className="flex items-center gap-2">
+              {active.tag && (
+                <span className="rounded-full bg-white/85 px-3 py-1 text-[10px] font-black text-brand-black">
+                  {active.tag}
+                </span>
+              )}
+              {active.mine && (
+                <button
+                  type="button"
+                  onClick={deleteActive}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur"
+                  aria-label="Delete this update"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="flex gap-2 pt-1 font-sans">
-            <button
-              onClick={onOpenEmergencyCard}
-              className="flex-1 py-2 bg-forest text-white hover:bg-forest/90 text-xs font-bold rounded-xl flex items-center justify-center gap-1 shadow-2xs"
-            >
-              <Info className="w-3.5 h-3.5 text-yellow-orange fill-yellow-orange/10" />
-              <span>View Update Details</span>
-            </button>
-            {onSendNudge && escalationState === 'CIRCLE_NOTIFIED' && (
-              <button
-                onClick={onSendNudge}
-                className="py-2 px-3 bg-white hover:bg-cloud text-forest text-xs font-semibold rounded-xl border border-forest/15 cursor-pointer"
-              >
-                🔔 Nudge Back
-              </button>
+          <button
+            type="button"
+            onClick={() => move(-1)}
+            className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/25 text-white backdrop-blur"
+            aria-label="Previous update"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => move(1)}
+            className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/25 text-white backdrop-blur"
+            aria-label="Next update"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+
+          <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+            <div className="mb-2 flex min-w-0 items-center gap-1.5 text-xs font-black">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-yellow-orange" />
+              <span className="truncate">{active.landmark}</span>
+            </div>
+            <p className="text-xl font-black">{active.note}</p>
+            {active.detail && (
+              <p className="mt-2 rounded-full bg-white/20 px-3 py-1.5 text-[10px] font-bold backdrop-blur">
+                {active.detail}
+              </p>
             )}
           </div>
         </div>
-      )}
+      </section>
 
-      {/* COMBINED FEEDS (Your feed in relation to your circle) */}
-      <div className="space-y-4">
-        {/* User's current private update prompt */}
-        {activeSession && userCheckIns.length === 0 && (
-          <div className="p-5 bg-white rounded-3xl border border-forest/10 text-center space-y-2 py-6">
-            <FlameKindling className="w-8 h-8 text-yellow-orange/70 mx-auto" />
-            <h4 className="font-semibold text-xs text-forest uppercase tracking-wide">Ready for a private snap</h4>
-            <p className="text-[11px] text-forest/60 max-w-xs mx-auto">
-              You started a nudge for <strong>{activeSession.reason}</strong>. Drop a quick photo update whenever it feels useful.
+      <div className="relative z-10 mt-4 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 rounded-full bg-[#f2c0ca]/65 px-4 py-3 text-xs font-black text-brand-black shadow-sm"
+        >
+          <Heart className="h-4 w-4 text-pink-accent fill-pink-accent" />
+          <span>cute</span>
+        </button>
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 rounded-full bg-white/85 px-4 py-3 text-xs font-black text-brand-black shadow-sm"
+        >
+          <MessageCircle className="h-4 w-4 text-forest" />
+          <span>reply</span>
+        </button>
+      </div>
+
+      <section className="lmk-panel relative z-10 mt-5 p-4 text-left">
+        <div className="mb-3 flex items-center justify-center gap-2 text-center">
+          <Sparkles className="h-4 w-4 text-yellow-orange" />
+          <h3 className="text-sm font-black text-brand-black">Today recap</h3>
+        </div>
+        {todayUpdates.length > 0 ? (
+          <div className="space-y-1">
+            <p className="text-sm font-black text-brand-black">
+              {todayUpdates.length} update{todayUpdates.length === 1 ? '' : 's'} posted today
+            </p>
+            <p className="text-xs font-bold text-brand-black/72">
+              {todayUpdates.slice(0, 3).map((update) => update.note).join(' · ')}
             </p>
           </div>
+        ) : (
+          <p className="text-xs font-bold text-brand-black/72">
+            Your day recap will show here after you post.
+          </p>
         )}
+      </section>
 
-        {/* User Check-ins List */}
-        {userCheckIns.map((ci, index) => (
-          <div
-            key={ci.id}
-            id={`my-checkin-${ci.id}`}
-            className="bg-white rounded-3xl overflow-hidden border border-forest/10 shadow-sm text-left transition-all"
-          >
-            {/* Header / Author */}
-            <div className="p-3.5 flex items-center justify-between border-b border-forest/5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-forest text-white font-serif font-bold text-xs flex items-center justify-center">
-                  ME
-                </div>
-                <div>
-                  <div className="font-bold text-xs text-forest flex items-center gap-1.5 leading-none">
-                    <span>You (Late Travel Home)</span>
-                    <span className="bg-azure text-forest/80 text-[8px] font-bold px-1.5 py-0.2 rounded">
-                      PRIVATE
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-forest/50 font-mono">
-                    {formatTimeAgo(ci.timestamp)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Extra context log label */}
-              {ci.transportDetails?.plates && (
-                <span className="text-[8px] font-mono text-forest/70 bg-[#eedebf] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                  Uber Logged
-                </span>
-              )}
-            </div>
-
-            {/* Photo Post */}
-            <div className="relative aspect-[4/3] bg-forest/5">
-              <img
-                src={ci.photoUrl}
-                alt="My checkin"
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-white">
-                <div className="flex items-center gap-1.5 text-xs font-semibold">
-                  <MapPin className="w-3.5 h-3.5 text-yellow-orange" />
-                  <span>{ci.landmark}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer comments and notes */}
-            <div className="p-3.5 space-y-2">
-              <p className="text-xs text-forest/80 italic font-medium leading-relaxed">
-                "{ci.note}"
-              </p>
-
-              {ci.transportDetails?.plates && (
-                <div className="p-2 bg-cloud rounded-2xl flex items-center justify-between text-[11px] text-forest/70 border border-forest/5 font-mono">
-                  <span>🚗 Uber: {ci.transportDetails.model}</span>
-                  <span className="font-bold text-forest uppercase">{ci.transportDetails.plates}</span>
-                </div>
-              )}
-
-              {/* Interaction Row representing mock feedback from family */}
-              <div className="pt-2 border-t border-forest/5 flex items-center justify-between text-xs text-forest/50 font-medium">
-                <div className="flex gap-4">
-                  <button type="button" className="flex items-center gap-1 hover:text-forest transition-colors">
-                    <Heart className="w-4 h-4 text-pink-accent fill-pink-accent" />
-                    <span>3 looked out</span>
-                  </button>
-                  <div className="flex items-center gap-1">
-                    <MessageCircle className="w-4 h-4" />
-                  <span>Sarah: "cute update"</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={onOpenEmergencyCard}
-                  className="text-forest hover:underline text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 cursor-pointer"
-                >
-                    <span>Details</span>
-                </button>
-              </div>
-            </div>
+      {activeRecap && (
+        <section className="lmk-panel relative z-10 mt-3 p-4 text-left">
+          <div className="mb-3 flex items-center justify-center gap-2 text-center">
+            <Users className="h-4 w-4 text-forest" />
+            <h3 className="text-sm font-black text-brand-black">Circle recaps</h3>
           </div>
-        ))}
 
-        {/* Friend Posts */}
-        {friendsUpdates.map((friend) => (
-          <div
-            key={friend.id}
-            id={`friend-card-${friend.id}`}
-            className="bg-white rounded-3xl overflow-hidden border border-forest/10 shadow-sm text-left transition-all"
-          >
-            {/* Header / Author */}
-            <div className="p-3.5 flex items-center justify-between border-b border-forest/5">
-              <div className="flex items-center gap-2.5">
-                <div className={`w-8 h-8 rounded-full ${friend.friendColor} flex items-center justify-center text-xs font-bold`}>
-                  {friend.friendInitials}
-                </div>
-                <div>
-                  <div className="font-bold text-xs text-forest flex items-center gap-1.5 leading-none">
-                    <span>{friend.friendName}</span>
-                    <span className="bg-[#e4eed7] text-forest text-[8px] font-bold px-1.5 py-0.2 rounded">
-                      {friend.reason}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-forest/50 font-mono">
-                    {friend.timeAgo}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Photo Post */}
-            <div className="relative aspect-[4/3] bg-forest/5">
-              <img
-                src={friend.photoUrl}
-                alt={friend.friendName}
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-white">
-                <div className="flex items-center gap-1.5 text-xs font-semibold">
-                  <MapPin className="w-3.5 h-3.5 text-yellow-orange" />
-                  <span>{friend.landmark}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer comments and notes */}
-            <div className="p-3.5 space-y-2">
-              <p className="text-xs text-forest/80 italic font-medium leading-relaxed">
-                "{friend.note}"
-              </p>
-
-              {friend.transportText && (
-                <div className="p-2 bg-cloud rounded-2xl flex items-center text-[10px] text-forest/70 border border-forest/5 font-mono">
-                  <span>🚞 {friend.transportText}</span>
-                </div>
-              )}
-
-              {/* Interaction Row */}
-              <div className="pt-2 border-t border-forest/5 flex items-center justify-between text-xs text-forest/50 font-medium">
-                <div className="flex gap-4">
-                  <button type="button" className="flex items-center gap-1 hover:text-red-500 transition-colors">
-                    <Heart className="w-4 h-4 hover:fill-red-500" />
-                    <span>Send nudge</span>
-                  </button>
-                </div>
-                <span className="text-[10px] bg-azure/40 text-forest px-2 py-0.5 rounded-md font-medium">
-                  Private update
+          <div className="mb-3 flex justify-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {friendRecaps.map((recap, index) => (
+              <button
+                key={recap.name}
+                type="button"
+                onClick={() => setActiveRecapIndex(index)}
+                className={`flex shrink-0 items-center gap-2 rounded-full px-2.5 py-1.5 text-[10px] font-black shadow-sm ${
+                  index === activeRecapIndex ? 'bg-yellow-orange text-brand-black' : 'bg-white/78 text-brand-black/70'
+                }`}
+              >
+                <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[8px] ${recap.color}`}>
+                  {recap.initials}
                 </span>
-              </div>
-            </div>
+                <span>{recap.name}</span>
+              </button>
+            ))}
           </div>
-        ))}
+
+          <div className="rounded-[26px] bg-white/68 p-3 text-center shadow-inner">
+            <p className="text-sm font-black text-brand-black">
+              {activeRecap.name} posted {activeRecap.updateCount} update{activeRecap.updateCount === 1 ? '' : 's'} today
+            </p>
+            <p className="mx-auto mt-1 max-w-[280px] text-xs font-bold text-brand-black/72">
+              {activeRecap.notes.slice(0, 2).join(' · ')}
+            </p>
+            <p className="mt-2 text-[10px] font-black text-forest/70">
+              {activeRecap.places.slice(0, 2).join(' / ')} · {activeRecap.latestTime}
+            </p>
+          </div>
+        </section>
+      )}
+
+      <section className="lmk-panel relative z-10 mt-3 p-4 text-left">
+        <div className="mb-3 flex items-center justify-center gap-2 text-center">
+          <CalendarDays className="h-4 w-4 text-forest" />
+          <h3 className="text-sm font-black text-brand-black">Archive</h3>
+        </div>
+        <div className="grid grid-cols-7 gap-1.5">
+          {archiveDays.map((day) => (
+            <button
+              key={day.key}
+              type="button"
+              onClick={() => day.count > 0 && openDay(day.key)}
+              className={`aspect-square rounded-[14px] text-[10px] font-black ${
+                day.count > 0
+                  ? 'bg-[#cce6fc] text-brand-black shadow-sm'
+                  : 'bg-brand-black/5 text-brand-black/55'
+              }`}
+              aria-label={`${day.label}, ${day.count} updates`}
+            >
+              <span className="block">{day.date}</span>
+              {day.count > 0 && <span className="mx-auto mt-1 block h-1.5 w-1.5 rounded-full bg-forest" />}
+            </button>
+          ))}
+        </div>
+      </section>
       </div>
     </div>
   );
+}
+
+function buildFriendRecaps(friendsUpdates: MockUpdate[]) {
+  const grouped = friendsUpdates.reduce<Record<string, FriendRecap>>((acc, update) => {
+    const name = update.friendName.split(' ')[0];
+    if (!acc[update.friendName]) {
+      acc[update.friendName] = {
+        name,
+        initials: update.friendInitials,
+        color: update.friendColor,
+        updateCount: 0,
+        places: [],
+        notes: [],
+        latestTime: update.timeAgo,
+      };
+    }
+
+    acc[update.friendName].updateCount += 1;
+    acc[update.friendName].places.push(update.landmark);
+    acc[update.friendName].notes.push(update.note);
+
+    return acc;
+  }, {});
+
+  return Object.values(grouped);
+}
+
+function formatTimeAgo(isoString: string) {
+  try {
+    const now = new Date();
+    const past = new Date(isoString);
+    const diffMins = Math.floor((now.getTime() - past.getTime()) / 60000);
+
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    return `${Math.floor(diffMins / 60)}h ago`;
+  } catch {
+    return 'recently';
+  }
+}
+
+function getDayKey(isoString: string) {
+  const date = new Date(isoString);
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+}
+
+function buildArchiveDays(updates: CircleUpdate[]) {
+  const counts = updates.reduce<Record<string, number>>((acc, update) => {
+    if (update.dayKey) acc[update.dayKey] = (acc[update.dayKey] || 0) + 1;
+    return acc;
+  }, {});
+
+  return Array.from({ length: 21 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (20 - index));
+    const key = getDayKey(date.toISOString());
+
+    return {
+      key,
+      date: String(date.getDate()),
+      label: date.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+      count: counts[key] || 0,
+    };
+  });
 }

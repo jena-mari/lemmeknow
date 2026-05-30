@@ -23,8 +23,8 @@ export async function generateGeminiCaption(input: CaptionInput): Promise<string
   }
 
   const prompt = [
-    'Write one tiny casual private-update caption for LEMMEKNOW.',
-    'Tone: chill, funny if natural, Gen Z, no panic language, no safety proof language.',
+    'Write one tiny casual private-update caption for LMK.',
+    'Tone: chill, funny if natural, Gen Z, casual, never alarming.',
     'Keep it under 9 words.',
     `User: ${input.username || 'friend'}`,
     `Activity: ${input.activity || 'hanging out'}`,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Contact } from '../types';
-import { Plus, Trash2, ShieldCheck, HelpCircle, Users } from 'lucide-react';
+import { Cloud, Plus, Trash2, Users } from 'lucide-react';
 
 interface CircleManagementProps {
   contacts: Contact[];
@@ -19,16 +19,16 @@ export default function CircleManagement({
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
 
-  const relations = ['Mom', 'Dad', 'Sister', 'Brother', 'Partner', 'Husband', 'Wife', 'Best Friend', 'Guardian', 'Flatmate'];
+  const relations = ['Best Friend', 'Roommate', 'Partner', 'Sibling', 'Uni Friend', 'Group Chat', 'Going-out Crew', 'Family'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Name is required');
+      setError('Add a name first');
       return;
     }
     if (!phone.trim()) {
-      setError('Phone number is required');
+      setError('Add a handle or number');
       return;
     }
 
@@ -42,7 +42,7 @@ export default function CircleManagement({
       'bg-pink-accent text-forest',
       'bg-[#ebdcb9] text-forest',
       'bg-yellow-orange/30 text-forest',
-      'bg-[#d1e5db] text-forest'
+      'bg-light-green text-forest'
     ];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
@@ -66,91 +66,85 @@ export default function CircleManagement({
   };
 
   return (
-    <div className="p-4 bg-cloud rounded-3xl border border-forest/10 space-y-4 shadow-sm" id="circle-management">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-forest" />
-          <h3 className="font-serif text-lg font-bold text-forest">Trusted Circle</h3>
-        </div>
-        <span className="text-xs bg-forest/5 text-forest px-2 py-0.5 rounded-full font-mono">
+    <div className="lmk-page -mx-4 -my-4 min-h-full px-4 py-5 text-center text-brand-black" id="circle-management">
+      <div className="lmk-shell space-y-4">
+      <section className="relative z-10">
+        <Cloud className="mx-auto mb-4 h-12 w-[72px] stroke-[2.45] text-brand-black" />
+        <h3 className="text-[34px] font-black text-brand-black">Close Circle</h3>
+        <p className="mx-auto mt-2 max-w-[290px] text-[14px] font-medium text-brand-black">The people who get your quick LMK updates.</p>
+        <span className="mt-3 inline-flex rounded-full bg-white/85 px-3 py-1.5 text-xs font-black text-brand-black shadow-sm">
           {contacts.length} added
         </span>
-      </div>
+      </section>
 
-      <p className="text-xs text-forest/75 leading-relaxed bg-azure/20 p-2.5 rounded-2xl border border-azure/40">
-        🔒 <strong>Private by default:</strong> These are the only people who can see your LMK updates. No public feed, no follower count, and no always-on social broadcasting.
-      </p>
-
-      {/* Contact List */}
-      <div className="space-y-2.5">
+      <div className="relative z-10 space-y-2.5">
         {contacts.map((contact) => (
           <div
             key={contact.id}
             id={`contact-card-${contact.id}`}
-            className="flex items-center justify-between p-3 bg-white hover:bg-white/95 rounded-2xl border border-forest/5 shadow-2sm hover:shadow-sm transition-all"
+            className="flex items-center justify-between rounded-[28px] border border-white/80 bg-white/76 p-3 text-left shadow-sm backdrop-blur transition-all hover:bg-white"
           >
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${contact.avatarColor}`}>
+            <div className="flex min-w-0 items-center gap-3">
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-black ${contact.avatarColor}`}>
                 {contact.initials}
               </div>
-              <div className="text-left">
-                <div className="font-semibold text-sm text-forest flex items-center gap-1.5">
-                  {contact.name}
-                  <span className="text-[10px] bg-azure font-medium text-forest/80 px-1.5 py-0.5 rounded-md">
+              <div className="min-w-0 text-left">
+                <div className="truncate text-sm font-black text-brand-black">{contact.name}</div>
+                <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                  <span className="shrink-0 rounded-full bg-azure px-1.5 py-0.5 text-[10px] font-bold text-brand-black">
                     {contact.relationship}
                   </span>
+                  <span className="truncate text-[11px] font-bold text-brand-black/65">{contact.phone}</span>
                 </div>
-                <div className="text-[11px] text-forest/60 font-mono">{contact.phone}</div>
               </div>
             </div>
 
             {contacts.length > 2 ? (
               <button
                 onClick={() => onRemoveContact(contact.id)}
-                className="p-2 text-forest/40 hover:text-red-500 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
+                className="rounded-full p-2 text-brand-black/60 transition-colors hover:bg-pink-accent/40 hover:text-brand-black"
                 title="Remove Contact"
                 id={`btn-remove-${contact.id}`}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="h-4 w-4" />
               </button>
             ) : (
-              <span className="text-[9px] text-forest/40 font-mono italic pr-2">Circle limit (min 2)</span>
+              <span className="pl-2 text-[9px] font-bold text-brand-black/55">min 2</span>
             )}
           </div>
         ))}
       </div>
 
-      {/* Add Button & Form */}
       {!showAddForm ? (
         <button
           onClick={() => { setShowAddForm(true); setError(''); }}
-          className="w-full py-2.5 bg-azure hover:bg-[#b0d8fa] text-forest rounded-2xl font-semibold text-sm transition-all flex items-center justify-center gap-2 border border-forest/10 shadow-2sm cursor-pointer"
+          className="lmk-primary relative z-10 flex h-[58px] w-full items-center justify-center gap-2 bg-yellow-orange text-[17px] font-medium text-black transition-all hover:bg-yellow-orange/90"
           id="btn-add-contact-trigger"
         >
-          <Plus className="w-4 h-4" />
-          <span>Add Trusted Contact</span>
+          <Plus className="h-4 w-4" />
+          <span>Add someone</span>
         </button>
       ) : (
-        <form onSubmit={handleSubmit} className="p-3.5 bg-white rounded-2xl border border-forest/10 space-y-3" id="add-contact-form">
+        <form onSubmit={handleSubmit} className="lmk-panel relative z-10 space-y-3 p-4" id="add-contact-form">
           <div className="text-left">
-            <label className="text-[10px] font-bold text-forest uppercase tracking-wider block mb-1">Full Name</label>
+            <label className="mb-1 block text-[10px] font-black uppercase text-brand-black/65">Full Name</label>
             <input
               type="text"
               placeholder="e.g. Rachel Green"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-2.5 bg-cloud/50 border border-forest/10 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-forest text-forest"
+              className="w-full rounded-[20px] border border-white/80 bg-white/82 p-3 text-sm font-bold text-brand-black focus:outline-none focus:ring-1 focus:ring-forest"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-left">
             <div>
-              <label className="text-[10px] font-bold text-forest uppercase tracking-wider block mb-1">Relationship</label>
+              <label className="mb-1 block text-[10px] font-black uppercase text-brand-black/65">Relationship</label>
               <select
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                className="w-full p-2.5 bg-cloud/50 border border-forest/10 rounded-xl text-xs focus:outline-none cursor-pointer text-forest"
+                className="w-full cursor-pointer rounded-[20px] border border-white/80 bg-white/82 p-3 text-xs font-bold text-brand-black focus:outline-none"
               >
                 {relations.map((rel) => (
                   <option key={rel} value={rel}>{rel}</option>
@@ -158,31 +152,31 @@ export default function CircleManagement({
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-forest uppercase tracking-wider block mb-1">Phone Number</label>
+              <label className="mb-1 block text-[10px] font-black uppercase text-brand-black/65">Handle / number</label>
               <input
-                type="tel"
-                placeholder="+61 400 000 000"
+                type="text"
+                placeholder="@mia"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full p-2.5 bg-cloud/50 border border-forest/10 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-forest text-forest"
+                className="w-full rounded-[20px] border border-white/80 bg-white/82 p-3 text-xs font-bold text-brand-black focus:outline-none focus:ring-1 focus:ring-forest"
                 required
               />
             </div>
           </div>
 
-          {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+          {error && <p className="text-xs font-medium text-red-500">{error}</p>}
 
           <div className="flex gap-2 pt-1.5">
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="flex-1 py-2 bg-cloud text-forest rounded-xl text-xs font-semibold hover:bg-forest/5 cursor-pointer"
+              className="flex-1 rounded-full bg-white py-3 text-xs font-black text-brand-black hover:bg-white/80"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2 bg-yellow-orange text-forest rounded-xl text-xs font-semibold hover:bg-yellow-orange/90 cursor-pointer"
+              className="flex-1 rounded-full bg-yellow-orange py-3 text-xs font-black text-black hover:bg-yellow-orange/90"
             >
               Add Contact
             </button>
@@ -190,9 +184,10 @@ export default function CircleManagement({
         </form>
       )}
 
-      <div className="flex items-center gap-1.5 justify-center py-1.5 text-[9px] text-forest/50 font-mono">
-        <ShieldCheck className="w-3.5 h-3.5 text-forest/70" />
-        <span>End-to-End Private Node Connection</span>
+      <div className="relative z-10 flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-bold text-brand-black/70">
+        <Users className="h-3.5 w-3.5" />
+        <span>Only your circle sees your updates</span>
+      </div>
       </div>
     </div>
   );
