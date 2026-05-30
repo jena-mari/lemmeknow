@@ -88,7 +88,7 @@ export default function CaptionEditor({
             <div className="absolute inset-x-0 bottom-0 p-4 text-white">
               <div className="mb-2 flex items-center gap-1.5 text-xs font-black">
                 <MapPin className="h-3.5 w-3.5 text-yellow-orange" />
-                <span>{attachedLocation?.label || landmark || approximateRegion || 'place tag'}</span>
+                <span>{attachedLocation?.placeName || attachedLocation?.label || landmark || approximateRegion || 'place tag'}</span>
               </div>
               <p className="text-xl font-black">{note || 'Add a tiny update'}</p>
             </div>
@@ -138,9 +138,9 @@ export default function CaptionEditor({
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-black/65" />
               <input
-                value={landmark}
+                value={attachedLocation?.placeName || landmark}
                 onChange={(event) => setLandmark(event.target.value)}
-                placeholder="location tag"
+                placeholder="finding place name"
                 className="w-full rounded-full border border-white/80 bg-white/82 py-3 pl-9 pr-3 text-xs font-bold text-brand-black placeholder:text-brand-black/60 focus:outline-none"
               />
             </div>

@@ -21,6 +21,10 @@ export interface AttachedLocation {
   longitude: number;
   accuracy?: number;
   label: string;
+  placeName?: string;
+  address?: string;
+  placeId?: string;
+  source?: 'google_places' | 'google_geocode' | 'device';
   capturedAt: string;
   googleMapsUrl: string;
   staticMapUrl?: string;

@@ -53,7 +53,7 @@ export default function CheckInForm({
   const [visibility, setVisibility] = useState<UpdateVisibility>('circle');
   const [livePreciseCoordinates, setLivePreciseCoordinates] = useState(preciseCoordinates);
   const [liveApproximateRegion, setLiveApproximateRegion] = useState(approximateRegion);
-  const [locationStatus, setLocationStatus] = useState('finding location');
+  const [locationStatus, setLocationStatus] = useState('finding place name');
   const [attachedLocation, setAttachedLocation] = useState<AttachedLocation | undefined>();
   const [isLocating, setIsLocating] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -105,12 +105,12 @@ export default function CheckInForm({
 
   const refreshLocation = async () => {
     setIsLocating(true);
-    setLocationStatus('finding location');
+    setLocationStatus('finding place name');
     const currentLocation = await getCurrentGoogleMapsLocation();
     setIsLocating(false);
 
     if (!currentLocation) {
-      setLocationStatus('location unavailable');
+      setLocationStatus('place unavailable');
       return;
     }
 
@@ -119,7 +119,7 @@ export default function CheckInForm({
     setLandmark(currentLocation.label);
     setLivePreciseCoordinates(coords);
     setLiveApproximateRegion(currentLocation.label);
-    setLocationStatus('location attached');
+    setLocationStatus(currentLocation.source === 'device' ? 'location attached' : 'place attached');
   };
 
   useEffect(() => {
@@ -310,7 +310,7 @@ export default function CheckInForm({
           <div className="flex min-w-0 items-center gap-2 rounded-full border border-white/80 bg-white/82 py-3 pl-3 pr-4 text-xs font-bold text-brand-black shadow-inner">
             <MapPin className="h-4 w-4 shrink-0 text-forest" />
             <span className="truncate">
-              {attachedLocation?.label || locationStatus}
+              {attachedLocation?.placeName || attachedLocation?.label || locationStatus}
             </span>
           </div>
           <button
@@ -334,16 +334,22 @@ export default function CheckInForm({
             <div className="flex h-28 flex-col items-center justify-center bg-[#cce6fc]/55 px-4 text-center">
               <Navigation className="mb-2 h-5 w-5 text-forest" />
               <p className="text-xs font-black text-brand-black">
-                {attachedLocation ? 'Location attached' : 'Waiting for location'}
+                {attachedLocation?.placeName || (attachedLocation ? 'Location attached' : 'Finding place name')}
               </p>
               <p className="mt-1 text-[10px] font-bold text-brand-black/62">
-                {attachedLocation?.label || 'Allow location to add Google Maps context.'}
+                {attachedLocation?.address || attachedLocation?.label || 'Allow location to add Google Maps context.'}
               </p>
             </div>
           )}
           <div className="flex items-center justify-between gap-2 px-3 py-2">
             <span className="min-w-0 truncate text-[10px] font-black text-forest/75">
-              {attachedLocation ? 'Google Maps location saved to this Update' : 'Location will attach automatically'}
+              {attachedLocation?.source === 'google_places'
+                ? 'Google place name saved to this Update'
+                : attachedLocation?.source === 'google_geocode'
+                  ? 'Google address saved to this Update'
+                  : attachedLocation
+                    ? 'Google Maps location saved to this Update'
+                    : 'Location will attach automatically'}
             </span>
             <button
               type="button"

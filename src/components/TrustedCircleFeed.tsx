@@ -402,7 +402,7 @@ export default function TrustedCircleFeed({
               <MapPin className="mb-2 h-5 w-5 text-forest" />
               <p className="text-xs font-black text-brand-black">Google Maps location attached</p>
               <p className="mt-1 max-w-[260px] text-[10px] font-bold text-brand-black/65">
-                {active.attachedLocation.label}
+                {active.attachedLocation.placeName || active.attachedLocation.label}
               </p>
             </div>
           )}
@@ -698,7 +698,7 @@ function buildAiTimeline(updates: CircleUpdate[]): AiTimelineItem[] {
 
 function getVisiblePlace(update: Pick<CircleUpdate, 'hideLocation' | 'attachedLocation' | 'landmark'>) {
   if (update.hideLocation) return 'location hidden';
-  return update.attachedLocation?.label || update.landmark || 'not tagged';
+  return update.attachedLocation?.placeName || update.attachedLocation?.label || update.landmark || 'not tagged';
 }
 
 function formatSmartContext(context?: CircleUpdate['extractedContext']) {

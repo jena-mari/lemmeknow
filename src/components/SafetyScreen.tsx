@@ -25,7 +25,7 @@ export default function SafetyScreen({ updates, onOpenUpdates }: SafetyScreenPro
           </p>
           <p className="mt-2 flex items-center justify-center gap-1 text-[10px] font-black text-forest/70">
             <MapPin className="h-3.5 w-3.5" />
-            Last known: {latest.hideLocation ? 'location hidden' : latest.attachedLocation?.label || latest.landmark || 'not tagged'}
+            Last known: {latest.hideLocation ? 'location hidden' : latest.attachedLocation?.placeName || latest.attachedLocation?.label || latest.landmark || 'not tagged'}
           </p>
           {latest.extractedContext?.activity && (
             <p className="mt-1 text-[10px] font-black text-brand-black/58">
