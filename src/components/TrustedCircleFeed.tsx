@@ -27,6 +27,7 @@ type CircleUpdate = {
   initials: string;
   color: string;
   time: string;
+  exactTime: string;
   photoUrl: string;
   note: string;
   landmark: string;
@@ -44,7 +45,22 @@ type FriendRecap = {
   updateCount: number;
   places: string[];
   notes: string[];
+  exactTimes: string[];
   latestTime: string;
+  days: FriendRecapDay[];
+};
+
+type FriendRecapDay = {
+  key: string;
+  label: string;
+  entries: FriendRecapEntry[];
+};
+
+type FriendRecapEntry = {
+  note: string;
+  place: string;
+  exactTime: string;
+  relativeTime: string;
 };
 
 export default function TrustedCircleFeed({
@@ -55,6 +71,7 @@ export default function TrustedCircleFeed({
 }: TrustedCircleFeedProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeRecapIndex, setActiveRecapIndex] = useState(0);
+  const [activeRecapDayIndex, setActiveRecapDayIndex] = useState(0);
 
   const updates = useMemo<CircleUpdate[]>(() => {
     const mine = userCheckIns.map((update) => ({
@@ -63,6 +80,7 @@ export default function TrustedCircleFeed({
       initials: 'ME',
       color: 'bg-yellow-orange text-brand-black',
       time: formatTimeAgo(update.timestamp),
+      exactTime: formatDateTime(update.timestamp),
       photoUrl: update.photoUrl,
       note: update.note,
       landmark: update.landmark,
@@ -79,6 +97,7 @@ export default function TrustedCircleFeed({
       initials: friend.friendInitials,
       color: friend.friendColor,
       time: friend.timeAgo,
+      exactTime: friend.timestamp ? formatDateTime(friend.timestamp) : friend.timeAgo,
       photoUrl: friend.photoUrl,
       note: friend.note,
       landmark: friend.landmark,
@@ -99,6 +118,7 @@ export default function TrustedCircleFeed({
   const archiveDays = useMemo(() => buildArchiveDays(myUpdates), [myUpdates]);
   const friendRecaps = useMemo(() => buildFriendRecaps(friendsUpdates), [friendsUpdates]);
   const activeRecap = friendRecaps[Math.min(activeRecapIndex, friendRecaps.length - 1)];
+  const activeRecapDay = activeRecap?.days[Math.min(activeRecapDayIndex, activeRecap.days.length - 1)];
   const active = updates[Math.min(activeIndex, updates.length - 1)];
 
   useEffect(() => {
@@ -112,6 +132,16 @@ export default function TrustedCircleFeed({
       setActiveRecapIndex(friendRecaps.length - 1);
     }
   }, [activeRecapIndex, friendRecaps.length]);
+
+  useEffect(() => {
+    setActiveRecapDayIndex(0);
+  }, [activeRecapIndex]);
+
+  useEffect(() => {
+    if (activeRecap && activeRecapDayIndex > 0 && activeRecapDayIndex >= activeRecap.days.length) {
+      setActiveRecapDayIndex(activeRecap.days.length - 1);
+    }
+  }, [activeRecap, activeRecapDayIndex]);
 
   const move = (direction: 1 | -1) => {
     setActiveIndex((current) => {
@@ -159,7 +189,9 @@ export default function TrustedCircleFeed({
       <div className="lmk-shell">
       <div className="relative z-10 mb-4 flex flex-col items-center">
         <h2 className="text-[34px] font-black text-brand-black">Updates</h2>
-        <p className="mt-1 text-[13px] font-medium text-brand-black">tap through your close circle</p>
+        <p className="mt-1 max-w-[300px] text-[13px] font-medium text-brand-black">
+          review recent activity, notes, time, and last known place
+        </p>
         <button
           type="button"
           onClick={onOpenCamera}
@@ -200,7 +232,7 @@ export default function TrustedCircleFeed({
         ))}
       </div>
 
-      <section className="lmk-panel relative z-10 overflow-hidden p-2">
+      <section key={active.id} className="lmk-panel lmk-story-card relative z-10 overflow-hidden p-2">
         <div className="relative aspect-[3/4] overflow-hidden rounded-[28px] bg-brand-black text-left">
           <img
             src={active.photoUrl}
@@ -217,7 +249,7 @@ export default function TrustedCircleFeed({
               </span>
               <div>
                 <div className="text-sm font-black leading-none">{active.name}</div>
-                <div className="mt-0.5 text-[10px] font-bold text-white/70">{active.time}</div>
+                <div className="mt-0.5 text-[10px] font-bold text-white/70">{active.exactTime}</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -262,6 +294,9 @@ export default function TrustedCircleFeed({
               <span className="truncate">{active.landmark}</span>
             </div>
             <p className="text-xl font-black">{active.note}</p>
+            <p className="mt-2 rounded-full bg-white/18 px-3 py-1.5 text-[10px] font-bold backdrop-blur">
+              Last known: {active.landmark} · {active.exactTime}
+            </p>
             {active.detail && (
               <p className="mt-2 rounded-full bg-white/20 px-3 py-1.5 text-[10px] font-bold backdrop-blur">
                 {active.detail}
@@ -291,7 +326,7 @@ export default function TrustedCircleFeed({
       <section className="lmk-panel relative z-10 mt-5 p-4 text-left">
         <div className="mb-3 flex items-center justify-center gap-2 text-center">
           <Sparkles className="h-4 w-4 text-yellow-orange" />
-          <h3 className="text-sm font-black text-brand-black">Today recap</h3>
+          <h3 className="text-sm font-black text-brand-black">Your recap</h3>
         </div>
         {todayUpdates.length > 0 ? (
           <div className="space-y-1">
@@ -299,17 +334,20 @@ export default function TrustedCircleFeed({
               {todayUpdates.length} update{todayUpdates.length === 1 ? '' : 's'} posted today
             </p>
             <p className="text-xs font-bold text-brand-black/72">
-              {todayUpdates.slice(0, 3).map((update) => update.note).join(' · ')}
+              {todayUpdates.slice(0, 3).map((update) => `${update.exactTime}: ${update.note}`).join(' · ')}
+            </p>
+            <p className="text-[10px] font-black text-forest/70">
+              Last known: {todayUpdates[0]?.landmark || 'not tagged'}
             </p>
           </div>
         ) : (
           <p className="text-xs font-bold text-brand-black/72">
-            Your day recap will show here after you post.
+            Your circle can review your private recap here after you post.
           </p>
         )}
       </section>
 
-      {activeRecap && (
+      {activeRecap && activeRecapDay && (
         <section className="lmk-panel relative z-10 mt-3 p-4 text-left">
           <div className="mb-3 flex items-center justify-center gap-2 text-center">
             <Users className="h-4 w-4 text-forest" />
@@ -321,7 +359,10 @@ export default function TrustedCircleFeed({
               <button
                 key={recap.name}
                 type="button"
-                onClick={() => setActiveRecapIndex(index)}
+                onClick={() => {
+                  setActiveRecapIndex(index);
+                  setActiveRecapDayIndex(0);
+                }}
                 className={`flex shrink-0 items-center gap-2 rounded-full px-2.5 py-1.5 text-[10px] font-black shadow-sm ${
                   index === activeRecapIndex ? 'bg-yellow-orange text-brand-black' : 'bg-white/78 text-brand-black/70'
                 }`}
@@ -334,15 +375,36 @@ export default function TrustedCircleFeed({
             ))}
           </div>
 
-          <div className="rounded-[26px] bg-white/68 p-3 text-center shadow-inner">
+          <div className="mb-3 flex justify-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            {activeRecap.days.map((day, index) => (
+              <button
+                key={day.key}
+                type="button"
+                onClick={() => setActiveRecapDayIndex(index)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-black shadow-sm ${
+                  index === activeRecapDayIndex ? 'bg-light-green text-forest' : 'bg-white/72 text-brand-black/65'
+                }`}
+              >
+                {day.label}
+              </button>
+            ))}
+          </div>
+
+          <div key={`${activeRecap.name}-${activeRecapDay.key}`} className="lmk-recap-card rounded-[26px] bg-white/68 p-3 text-center shadow-inner">
             <p className="text-sm font-black text-brand-black">
-              {activeRecap.name} posted {activeRecap.updateCount} update{activeRecap.updateCount === 1 ? '' : 's'} today
+              {activeRecap.name} posted {activeRecapDay.entries.length} update{activeRecapDay.entries.length === 1 ? '' : 's'} on {activeRecapDay.label}
             </p>
-            <p className="mx-auto mt-1 max-w-[280px] text-xs font-bold text-brand-black/72">
-              {activeRecap.notes.slice(0, 2).join(' · ')}
-            </p>
+            <div className="mx-auto mt-2 max-w-[290px] space-y-2 text-left">
+              {activeRecapDay.entries.slice(0, 3).map((entry) => (
+                <div key={`${entry.exactTime}-${entry.place}`} className="rounded-[20px] bg-white/72 px-3 py-2">
+                  <p className="text-[10px] font-black text-forest/75">{entry.exactTime}</p>
+                  <p className="mt-0.5 text-xs font-bold text-brand-black/76">{entry.note}</p>
+                  <p className="mt-1 text-[10px] font-black text-brand-black/58">Last known: {entry.place}</p>
+                </div>
+              ))}
+            </div>
             <p className="mt-2 text-[10px] font-black text-forest/70">
-              {activeRecap.places.slice(0, 2).join(' / ')} · {activeRecap.latestTime}
+              Latest overall: {activeRecap.places[0] || 'not tagged'} · {activeRecap.latestTime}
             </p>
           </div>
         </section>
@@ -351,8 +413,11 @@ export default function TrustedCircleFeed({
       <section className="lmk-panel relative z-10 mt-3 p-4 text-left">
         <div className="mb-3 flex items-center justify-center gap-2 text-center">
           <CalendarDays className="h-4 w-4 text-forest" />
-          <h3 className="text-sm font-black text-brand-black">Archive</h3>
+          <h3 className="text-sm font-black text-brand-black">Date archive</h3>
         </div>
+        <p className="mb-3 text-center text-[11px] font-bold text-brand-black/68">
+          Pick a date to review older Updates, notes, timestamps, and location tags.
+        </p>
         <div className="grid grid-cols-7 gap-1.5">
           {archiveDays.map((day) => (
             <button
@@ -378,7 +443,9 @@ export default function TrustedCircleFeed({
 }
 
 function buildFriendRecaps(friendsUpdates: MockUpdate[]) {
-  const grouped = friendsUpdates.reduce<Record<string, FriendRecap>>((acc, update) => {
+  const sortedUpdates = [...friendsUpdates].sort((a, b) => getUpdateTime(b) - getUpdateTime(a));
+
+  const grouped = sortedUpdates.reduce<Record<string, FriendRecap>>((acc, update) => {
     const name = update.friendName.split(' ')[0];
     if (!acc[update.friendName]) {
       acc[update.friendName] = {
@@ -389,17 +456,71 @@ function buildFriendRecaps(friendsUpdates: MockUpdate[]) {
         places: [],
         notes: [],
         latestTime: update.timeAgo,
+        exactTimes: [],
+        days: [],
       };
+    }
+
+    const dayKey = update.timestamp ? getDayKey(update.timestamp) : 'recent';
+    const dayLabel = update.timestamp ? formatRecapDayLabel(update.timestamp) : 'Recent';
+    let day = acc[update.friendName].days.find((item) => item.key === dayKey);
+
+    if (!day) {
+      day = {
+        key: dayKey,
+        label: dayLabel,
+        entries: [],
+      };
+      acc[update.friendName].days.push(day);
     }
 
     acc[update.friendName].updateCount += 1;
     acc[update.friendName].places.push(update.landmark);
     acc[update.friendName].notes.push(update.note);
+    acc[update.friendName].exactTimes.push(update.timestamp ? formatDateTime(update.timestamp) : update.timeAgo);
+    day.entries.push({
+      note: update.note,
+      place: update.landmark,
+      exactTime: update.timestamp ? formatDateTime(update.timestamp) : update.timeAgo,
+      relativeTime: update.timeAgo,
+    });
 
     return acc;
   }, {});
 
   return Object.values(grouped);
+}
+
+function getUpdateTime(update: MockUpdate) {
+  return update.timestamp ? new Date(update.timestamp).getTime() : 0;
+}
+
+function formatRecapDayLabel(isoString: string) {
+  const date = new Date(isoString);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (getDayKey(isoString) === getDayKey(today.toISOString())) return 'Today';
+  if (getDayKey(isoString) === getDayKey(yesterday.toISOString())) return 'Yesterday';
+
+  return date.toLocaleDateString([], {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function formatDateTime(isoString: string) {
+  try {
+    return new Date(isoString).toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  } catch {
+    return 'recently';
+  }
 }
 
 function formatTimeAgo(isoString: string) {

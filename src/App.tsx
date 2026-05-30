@@ -155,7 +155,7 @@ export default function App() {
               </div>
               <h2 className="text-[34px] font-black text-brand-black">More</h2>
               <p className="mx-auto mt-2 max-w-[260px] text-[15px] font-medium text-brand-black">
-                Small settings for your private circle.
+                LMK keeps your private Updates reviewable by your circle when they need context.
               </p>
             </section>
 

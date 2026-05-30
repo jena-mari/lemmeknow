@@ -163,7 +163,7 @@ export default function CheckInForm({
   if (page === 'camera') {
     return (
       <div className="lmk-page -mx-4 -my-4 flex min-h-full flex-col items-center px-4 py-5 text-brand-black" id="camera-page">
-        <section className="lmk-shell relative z-10 flex flex-1 overflow-hidden rounded-[38px] bg-brand-black shadow-[0_20px_46px_rgba(18,66,36,0.16)]">
+        <section className="lmk-shell lmk-story-card relative z-10 flex flex-1 overflow-hidden rounded-[38px] bg-brand-black shadow-[0_20px_46px_rgba(18,66,36,0.16)]">
           <video
             ref={videoRef}
             playsInline
@@ -200,7 +200,7 @@ export default function CheckInForm({
                 type="button"
                 onClick={handleSnap}
                 disabled={!isCameraReady}
-                className="flex h-22 w-22 items-center justify-center rounded-full border-[7px] border-white bg-yellow-orange text-brand-black shadow-lg disabled:bg-white/55 disabled:text-brand-black/60"
+                className="lmk-snap flex h-22 w-22 items-center justify-center rounded-full border-[7px] border-white bg-yellow-orange text-brand-black shadow-lg disabled:bg-white/55 disabled:text-brand-black/60"
                 aria-label="Snap photo"
               >
                 <Camera className="h-8 w-8" />
@@ -230,7 +230,7 @@ export default function CheckInForm({
         retake
       </button>
 
-      <section className="relative z-10 overflow-hidden rounded-[34px] bg-brand-black shadow-[0_18px_42px_rgba(18,66,36,0.14)]">
+      <section className="lmk-story-card relative z-10 overflow-hidden rounded-[34px] bg-brand-black shadow-[0_18px_42px_rgba(18,66,36,0.14)]">
         <div className="relative aspect-[4/5]">
           <img src={photoUrl} alt="Snapped update" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent p-4 text-white">
@@ -295,7 +295,7 @@ export default function CheckInForm({
         </div>
 
         {detailsOpen && (
-          <div className="mt-3 space-y-3 rounded-[24px] bg-[#cce6fc]/45 p-3">
+          <div className="lmk-drawer mt-3 space-y-3 rounded-[24px] bg-[#cce6fc]/45 p-3">
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
               {activityTags.map((tag) => (
                 <button

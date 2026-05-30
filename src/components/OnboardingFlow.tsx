@@ -123,8 +123,8 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <br />
               you&apos;re safe.
             </h1>
-            <p className="mx-auto mt-7 max-w-[300px] text-[19px] font-medium text-black">
-              A private, consent-first check-in app.
+            <p className="mx-auto mt-7 max-w-[310px] text-[19px] font-medium text-black">
+              Private updates your circle can review if you go missing.
             </p>
             <button
               type="button"
@@ -184,7 +184,9 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="lmk-shell">
             <Cloud className="mx-auto mb-5 h-10 w-16 stroke-[2.45] text-brand-black" />
             <h1 className="text-[38px] font-black text-brand-black">Add your people</h1>
-            <p className="mx-auto mt-2 max-w-[250px] text-[15px] font-medium text-brand-black">Pick a few close contacts.</p>
+            <p className="mx-auto mt-2 max-w-[280px] text-[15px] font-medium text-brand-black">
+              Pick who can review your Updates, Recap, notes, and last location.
+            </p>
 
             <div className="my-5 grid grid-cols-3 gap-2">
               {sourceOptions.map((source) => {

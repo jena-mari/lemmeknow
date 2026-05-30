@@ -35,6 +35,7 @@ export interface MockUpdate {
   friendName: string;
   friendInitials: string;
   friendColor: string;
+  timestamp?: string;
   timeAgo: string;
   reason: string;
   landmark: string;
