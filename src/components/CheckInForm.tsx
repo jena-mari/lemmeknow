@@ -1,12 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { CheckIn, LocationSharingOption } from '../types';
-import { generateGeminiCaption, localActivitySuggestions } from '../services/gemini';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AttachedLocation, CheckIn, LocationSharingOption, UpdateVisibility } from '../types';
+import { extractSmartContext, generateGeminiCaption, localActivitySuggestions } from '../services/gemini';
+import { getCurrentGoogleMapsLocation } from '../services/location';
 import {
   Camera,
   CheckCircle2,
   ChevronDown,
+  EyeOff,
+  Lock,
   MapPin,
+  Navigation,
   RefreshCw,
+  Sparkles,
+  Users,
   Wand2,
 } from 'lucide-react';
 
@@ -43,15 +49,24 @@ export default function CheckInForm({
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [cameraMessage, setCameraMessage] = useState('Camera ready');
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [hideLocation, setHideLocation] = useState(false);
+  const [visibility, setVisibility] = useState<UpdateVisibility>('circle');
   const [livePreciseCoordinates, setLivePreciseCoordinates] = useState(preciseCoordinates);
   const [liveApproximateRegion, setLiveApproximateRegion] = useState(approximateRegion);
-  const [locationStatus, setLocationStatus] = useState('location tag');
+  const [locationStatus, setLocationStatus] = useState('finding location');
+  const [attachedLocation, setAttachedLocation] = useState<AttachedLocation | undefined>();
+  const [isLocating, setIsLocating] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [geminiIdeas, setGeminiIdeas] = useState<string[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const captionIdeas = localActivitySuggestions().slice(0, 4);
+  const captionIdeas = (geminiIdeas.length ? geminiIdeas : localActivitySuggestions()).slice(0, 4);
   const activityTags = ['date', 'uni', 'going out', 'hackathon', 'commute'];
+  const smartContext = useMemo(
+    () => extractSmartContext(`${note} ${plates}`.trim(), activity),
+    [activity, note, plates]
+  );
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -88,28 +103,28 @@ export default function CheckInForm({
     };
   }, []);
 
+  const refreshLocation = async () => {
+    setIsLocating(true);
+    setLocationStatus('finding location');
+    const currentLocation = await getCurrentGoogleMapsLocation();
+    setIsLocating(false);
+
+    if (!currentLocation) {
+      setLocationStatus('location unavailable');
+      return;
+    }
+
+    const coords = `${currentLocation.latitude.toFixed(5)}, ${currentLocation.longitude.toFixed(5)}`;
+    setAttachedLocation(currentLocation);
+    setLandmark(currentLocation.label);
+    setLivePreciseCoordinates(coords);
+    setLiveApproximateRegion(currentLocation.label);
+    setLocationStatus('location attached');
+  };
+
   useEffect(() => {
-    if (locationSharingOption === 'landmark_only') {
-      setLocationStatus('place tag');
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      setLocationStatus('place tag');
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const coords = `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
-        setLivePreciseCoordinates(coords);
-        setLiveApproximateRegion(`near ${position.coords.latitude.toFixed(2)}, ${position.coords.longitude.toFixed(2)}`);
-        setLocationStatus('nearby');
-      },
-      () => setLocationStatus('place tag'),
-      { enableHighAccuracy: false, maximumAge: 60000, timeout: 5000 }
-    );
-  }, [locationSharingOption]);
+    refreshLocation();
+  }, []);
 
   const handleSnap = () => {
     const video = videoRef.current;
@@ -127,6 +142,7 @@ export default function CheckInForm({
       const context = canvas.getContext('2d');
       context?.drawImage(video, 0, 0, canvas.width, canvas.height);
       setPhotoUrl(canvas.toDataURL('image/jpeg', 0.92));
+      refreshLocation();
       setIsCapturing(false);
       setPage('compose');
     }, 600);
@@ -140,7 +156,11 @@ export default function CheckInForm({
       landmark,
       activity,
     });
-    setNote(suggestion.replace(/^["']|["']$/g, ''));
+    const cleanSuggestion = suggestion.replace(/^["']|["']$/g, '');
+    setGeminiIdeas([
+      cleanSuggestion,
+      ...localActivitySuggestions().filter((idea) => idea !== cleanSuggestion),
+    ].slice(0, 4));
     setIsSuggesting(false);
   };
 
@@ -148,14 +168,18 @@ export default function CheckInForm({
     e.preventDefault();
     onPostCheckIn({
       photoUrl,
-      landmark: landmark.trim() || activity,
+      landmark: attachedLocation?.label || landmark.trim() || activity,
+      attachedLocation,
+      hideLocation,
+      visibility,
+      extractedContext: smartContext,
       note: note.trim() || 'quick little update',
       locationSharingOption,
-      preciseCoordinates: locationSharingOption === 'precise' ? livePreciseCoordinates : undefined,
-      approximateRegion: locationSharingOption === 'approximate' ? liveApproximateRegion : undefined,
-      transportDetails: plates.trim() || model.trim() ? {
-        plates: plates.trim().toUpperCase(),
-        model: model.trim() || activity,
+      preciseCoordinates: !hideLocation && locationSharingOption === 'precise' ? livePreciseCoordinates : undefined,
+      approximateRegion: !hideLocation && locationSharingOption === 'approximate' ? liveApproximateRegion : undefined,
+      transportDetails: plates.trim() || model.trim() || smartContext.vehiclePlate ? {
+        plates: (plates.trim() || smartContext.vehiclePlate || '').toUpperCase(),
+        model: model.trim() || smartContext.activity || activity,
       } : undefined,
     });
   };
@@ -190,7 +214,7 @@ export default function CheckInForm({
               close circle
             </span>
             <span className="rounded-full bg-white/85 px-3 py-1.5 text-[10px] font-black text-brand-black">
-              {cameraMessage}
+              {isLocating ? 'finding place' : cameraMessage}
             </span>
           </div>
 
@@ -271,18 +295,23 @@ export default function CheckInForm({
               {suggestion}
             </button>
           ))}
+          {geminiIdeas.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setGeminiIdeas([])}
+              className="shrink-0 rounded-full border border-white/80 bg-white/60 px-3 py-1.5 text-[10px] font-bold text-brand-black/58"
+            >
+              ignore
+            </button>
+          )}
         </div>
 
         <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-black/65" />
-            <input
-              type="text"
-              placeholder={locationStatus}
-              value={landmark}
-              onChange={(event) => setLandmark(event.target.value)}
-              className="w-full rounded-full border border-white/80 bg-white/82 py-3 pl-9 pr-3 text-xs font-bold text-brand-black placeholder:text-brand-black/60 focus:outline-none"
-            />
+          <div className="flex min-w-0 items-center gap-2 rounded-full border border-white/80 bg-white/82 py-3 pl-3 pr-4 text-xs font-bold text-brand-black shadow-inner">
+            <MapPin className="h-4 w-4 shrink-0 text-forest" />
+            <span className="truncate">
+              {attachedLocation?.label || locationStatus}
+            </span>
           </div>
           <button
             type="button"
@@ -292,6 +321,38 @@ export default function CheckInForm({
             <span>more</span>
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${detailsOpen ? 'rotate-180' : ''}`} />
           </button>
+        </div>
+
+        <div className="mt-3 overflow-hidden rounded-[26px] border border-white/80 bg-white/72 shadow-inner">
+          {attachedLocation?.staticMapUrl ? (
+            <img
+              src={attachedLocation.staticMapUrl}
+              alt="Google Maps preview of attached location"
+              className="h-28 w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-28 flex-col items-center justify-center bg-[#cce6fc]/55 px-4 text-center">
+              <Navigation className="mb-2 h-5 w-5 text-forest" />
+              <p className="text-xs font-black text-brand-black">
+                {attachedLocation ? 'Location attached' : 'Waiting for location'}
+              </p>
+              <p className="mt-1 text-[10px] font-bold text-brand-black/62">
+                {attachedLocation?.label || 'Allow location to add Google Maps context.'}
+              </p>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-2 px-3 py-2">
+            <span className="min-w-0 truncate text-[10px] font-black text-forest/75">
+              {attachedLocation ? 'Google Maps location saved to this Update' : 'Location will attach automatically'}
+            </span>
+            <button
+              type="button"
+              onClick={refreshLocation}
+              className="lmk-tap shrink-0 rounded-full bg-light-green/80 px-3 py-1.5 text-[10px] font-black text-forest"
+            >
+              {isLocating ? 'finding' : 'refresh'}
+            </button>
+          </div>
         </div>
 
         {detailsOpen && (
@@ -328,6 +389,53 @@ export default function CheckInForm({
                 onChange={(event) => setPlates(event.target.value)}
                 className="rounded-[18px] border border-white/80 bg-white px-3 py-3 text-xs font-bold text-brand-black placeholder:text-brand-black/60 focus:outline-none"
               />
+            </div>
+            {(smartContext.activity || smartContext.destination || smartContext.vehiclePlate) && (
+              <div className="rounded-[20px] bg-white/70 p-3 shadow-inner">
+                <p className="mb-2 flex items-center gap-1.5 text-[10px] font-black text-forest/75">
+                  <Sparkles className="h-3.5 w-3.5 text-yellow-orange" />
+                  Gemini context
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {smartContext.activity && (
+                    <span className="rounded-full bg-light-green/80 px-2.5 py-1 text-[10px] font-black text-forest">
+                      Activity: {smartContext.activity}
+                    </span>
+                  )}
+                  {smartContext.destination && (
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-brand-black/68">
+                      To: {smartContext.destination}
+                    </span>
+                  )}
+                  {smartContext.vehiclePlate && (
+                    <span className="rounded-full bg-yellow-orange/80 px-2.5 py-1 text-[10px] font-black text-brand-black">
+                      Plate: {smartContext.vehiclePlate}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setVisibility((current) => current === 'circle' ? 'only_me' : 'circle')}
+                className={`flex items-center justify-center gap-1.5 rounded-[18px] px-3 py-3 text-[10px] font-black ${
+                  visibility === 'only_me' ? 'bg-brand-black text-white' : 'bg-white text-brand-black/70'
+                }`}
+              >
+                {visibility === 'only_me' ? <Lock className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
+                {visibility === 'only_me' ? 'only me' : 'circle'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setHideLocation((current) => !current)}
+                className={`flex items-center justify-center gap-1.5 rounded-[18px] px-3 py-3 text-[10px] font-black ${
+                  hideLocation ? 'bg-pink-accent/70 text-brand-black' : 'bg-white text-brand-black/70'
+                }`}
+              >
+                <EyeOff className="h-3.5 w-3.5" />
+                {hideLocation ? 'location hidden' : 'show location'}
+              </button>
             </div>
           </div>
         )}

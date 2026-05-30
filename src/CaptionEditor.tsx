@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CheckCircle2, ChevronDown, MapPin, Wand2, X } from 'lucide-react';
-import { CheckIn, LocationSharingOption } from './types';
+import { AttachedLocation, CheckIn, LocationSharingOption } from './types';
+import { getCurrentGoogleMapsLocation } from './services/location';
 
 const CAPTION_SUGGESTIONS = [
   'at hackathon rn lol',
@@ -33,11 +34,27 @@ export default function CaptionEditor({
   const [landmark, setLandmark] = useState(initialLandmark);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [transport, setTransport] = useState('');
+  const [attachedLocation, setAttachedLocation] = useState<AttachedLocation | undefined>();
+
+  useEffect(() => {
+    let disposed = false;
+
+    getCurrentGoogleMapsLocation().then((currentLocation) => {
+      if (disposed || !currentLocation) return;
+      setAttachedLocation(currentLocation);
+      setLandmark(currentLocation.label);
+    });
+
+    return () => {
+      disposed = true;
+    };
+  }, []);
 
   const handlePost = () => {
     onPost({
       photoUrl,
-      landmark: landmark.trim() || approximateRegion || 'place tag',
+      landmark: attachedLocation?.label || landmark.trim() || approximateRegion || 'place tag',
+      attachedLocation,
       note: note.trim() || 'quick little update',
       locationSharingOption,
       approximateRegion: locationSharingOption === 'approximate' ? approximateRegion : undefined,
@@ -71,7 +88,7 @@ export default function CaptionEditor({
             <div className="absolute inset-x-0 bottom-0 p-4 text-white">
               <div className="mb-2 flex items-center gap-1.5 text-xs font-black">
                 <MapPin className="h-3.5 w-3.5 text-yellow-orange" />
-                <span>{landmark || approximateRegion || 'place tag'}</span>
+                <span>{attachedLocation?.label || landmark || approximateRegion || 'place tag'}</span>
               </div>
               <p className="text-xl font-black">{note || 'Add a tiny update'}</p>
             </div>
@@ -107,6 +124,14 @@ export default function CaptionEditor({
                 </button>
               ))}
             </div>
+          )}
+
+          {attachedLocation?.staticMapUrl && (
+            <img
+              src={attachedLocation.staticMapUrl}
+              alt="Google Maps preview of attached location"
+              className="mt-3 h-24 w-full rounded-[22px] object-cover"
+            />
           )}
 
           <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">

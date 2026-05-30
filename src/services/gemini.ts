@@ -5,6 +5,15 @@ type CaptionInput = {
   activity: string;
 };
 
+type SmartContext = {
+  activity?: string;
+  destination?: string;
+  vehiclePlate?: string;
+  transitMode?: string;
+  people?: string[];
+  cleanedNote?: string;
+};
+
 const fallbackCaptions = [
   'at hackathon rn lol',
   'quick uni update',
@@ -67,4 +76,44 @@ export function localActivitySuggestions() {
     'coffee run',
     'date night',
   ];
+}
+
+export function extractSmartContext(note: string, activity: string): SmartContext {
+  const text = note.trim();
+  const lower = text.toLowerCase();
+  const vehiclePlate = text.match(/\b[A-Z0-9]{2,4}[-\s]?[A-Z0-9]{2,4}\b/)?.[0]?.replace(/\s+/g, '');
+  const people = Array.from(text.matchAll(/\bwith\s+([A-Z][a-z]+)\b/g)).map((match) => match[1]);
+  const destination = lower.includes('home')
+    ? 'home'
+    : lower.match(/\bto\s+([a-z][a-z\s]{2,18})/)?.[1]?.trim();
+
+  let inferredActivity = activity || undefined;
+  let transitMode: string | undefined;
+
+  if (lower.includes('uber') || lower.includes('lyft')) {
+    inferredActivity = 'Uber ride';
+    transitMode = 'rideshare';
+  } else if (lower.includes('train')) {
+    inferredActivity = 'Train ride';
+    transitMode = 'train';
+  } else if (lower.includes('bus')) {
+    inferredActivity = 'Bus ride';
+    transitMode = 'bus';
+  } else if (lower.includes('walking') || lower.includes('walk')) {
+    inferredActivity = 'Walking';
+    transitMode = 'walk';
+  } else if (lower.includes('hackathon')) {
+    inferredActivity = 'Hackathon';
+  } else if (lower.includes('uni') || lower.includes('class')) {
+    inferredActivity = 'Uni';
+  }
+
+  return {
+    activity: inferredActivity,
+    destination,
+    vehiclePlate,
+    transitMode,
+    people: people.length ? people : undefined,
+    cleanedNote: text ? text.replace(/\s+/g, ' ') : undefined,
+  };
 }

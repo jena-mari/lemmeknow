@@ -86,7 +86,9 @@ export default function InstantsGrid({ checkIns, contacts, title = 'Review grid'
                 />
                 <div className="absolute bottom-2 left-2 right-2">
                   <p className="text-white text-[10px] font-medium truncate">{ci.note}</p>
-                  <p className="text-white/60 text-[9px]">{timeAgo(ci.timestamp)}</p>
+                  <p className="truncate text-white/60 text-[9px]">
+                    {timeAgo(ci.timestamp)} · {ci.hideLocation ? 'location hidden' : ci.attachedLocation?.label || ci.landmark}
+                  </p>
                 </div>
                 {/* New update dot on the most recent */}
                 {i === 0 && (

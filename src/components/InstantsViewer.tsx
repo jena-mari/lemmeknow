@@ -63,7 +63,7 @@ export default function InstantsViewer({ checkIns, contacts, onClose }: Props) {
         {/* Location pin */}
         <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full">
           <MapPin className="w-3 h-3 text-white" />
-          <span className="text-white text-[10px]">{current.landmark}</span>
+          <span className="text-white text-[10px]">{current.hideLocation ? 'location hidden' : current.attachedLocation?.label || current.landmark}</span>
         </div>
 
         {/* Transport badge */}
@@ -82,6 +82,16 @@ export default function InstantsViewer({ checkIns, contacts, onClose }: Props) {
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%)' }}
           >
             <p className="text-white text-sm font-medium">{current.note}</p>
+            {current.attachedLocation && !current.hideLocation && (
+              <a
+                href={current.attachedLocation.googleMapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold text-white backdrop-blur"
+              >
+                Open Google Maps
+              </a>
+            )}
           </div>
         )}
 
@@ -101,7 +111,7 @@ export default function InstantsViewer({ checkIns, contacts, onClose }: Props) {
       {/* Safe status footer */}
       <div className="flex items-center justify-center gap-2 py-4">
         <CheckCircle className="w-4 h-4 text-green-400" />
-        <span className="text-white/80 text-xs">{current.approximateRegion || current.landmark}</span>
+        <span className="text-white/80 text-xs">{current.hideLocation ? 'location hidden' : current.attachedLocation?.label || current.approximateRegion || current.landmark}</span>
       </div>
     </div>
   );

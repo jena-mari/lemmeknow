@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckIn, Contact, MockUpdate } from '../types';
+import { AttachedLocation, CheckIn, Contact, MockUpdate } from '../types';
 import { MOCK_FRIENDS_UPDATES } from '../data/mockData';
 import InstantsGrid from './InstantsGrid';
 import {
@@ -7,9 +7,14 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
+  Clock3,
+  EyeOff,
   Heart,
+  Lock,
   MapPin,
   MessageCircle,
+  Route,
+  ShieldCheck,
   Sparkles,
   Trash2,
   Users,
@@ -21,6 +26,7 @@ interface TrustedCircleFeedProps {
   friendsUpdates?: MockUpdate[];
   onOpenCamera: () => void;
   onDeleteUpdate: (id: string) => void;
+  onUpdatePrivacy: (id: string, changes: { hideLocation?: boolean; visibility?: 'circle' | 'only_me' }) => void;
 }
 
 type CircleUpdate = {
@@ -33,6 +39,17 @@ type CircleUpdate = {
   photoUrl: string;
   note: string;
   landmark: string;
+  attachedLocation?: AttachedLocation;
+  hideLocation?: boolean;
+  visibility?: 'circle' | 'only_me';
+  extractedContext?: {
+    activity?: string;
+    destination?: string;
+    vehiclePlate?: string;
+    transitMode?: string;
+    people?: string[];
+    cleanedNote?: string;
+  };
   tag?: string;
   detail?: string;
   mine?: boolean;
@@ -63,6 +80,14 @@ type FriendRecapEntry = {
   place: string;
   exactTime: string;
   relativeTime: string;
+  context?: string;
+};
+
+type AiTimelineItem = {
+  time: string;
+  note: string;
+  place: string;
+  context?: string;
 };
 
 export default function TrustedCircleFeed({
@@ -71,6 +96,7 @@ export default function TrustedCircleFeed({
   friendsUpdates = MOCK_FRIENDS_UPDATES,
   onOpenCamera,
   onDeleteUpdate,
+  onUpdatePrivacy,
 }: TrustedCircleFeedProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeRecapIndex, setActiveRecapIndex] = useState(0);
@@ -87,6 +113,10 @@ export default function TrustedCircleFeed({
       photoUrl: update.photoUrl,
       note: update.note,
       landmark: update.landmark,
+      attachedLocation: update.attachedLocation,
+      hideLocation: update.hideLocation,
+      visibility: update.visibility || 'circle',
+      extractedContext: update.extractedContext,
       tag: update.transportDetails?.model,
       detail: update.transportDetails?.plates,
       mine: true,
@@ -104,9 +134,15 @@ export default function TrustedCircleFeed({
       photoUrl: friend.photoUrl,
       note: friend.note,
       landmark: friend.landmark,
+      attachedLocation: friend.attachedLocation,
+      hideLocation: friend.hideLocation,
+      visibility: friend.visibility || 'circle',
+      extractedContext: friend.extractedContext,
       tag: friend.reason,
       detail: friend.transportText,
       mine: false,
+      timestamp: friend.timestamp,
+      dayKey: friend.timestamp ? getDayKey(friend.timestamp) : undefined,
     }));
 
     return [...mine, ...friends];
@@ -123,6 +159,9 @@ export default function TrustedCircleFeed({
   const activeRecap = friendRecaps[Math.min(activeRecapIndex, friendRecaps.length - 1)];
   const activeRecapDay = activeRecap?.days[Math.min(activeRecapDayIndex, activeRecap.days.length - 1)];
   const active = updates[Math.min(activeIndex, updates.length - 1)];
+  const circleVisibleUpdates = myUpdates.filter((update) => update.visibility !== 'only_me');
+  const latestCircleVisible = circleVisibleUpdates[0];
+  const aiTimeline = useMemo(() => buildAiTimeline(todayUpdates.length ? todayUpdates : myUpdates.slice(0, 4)), [myUpdates, todayUpdates]);
 
   useEffect(() => {
     if (activeIndex > 0 && activeIndex >= updates.length) {
@@ -191,7 +230,7 @@ export default function TrustedCircleFeed({
     <div className="lmk-page -mx-4 -my-4 min-h-full overflow-hidden px-4 py-5 pb-10 text-center" id="updates-viewer">
       <div className="lmk-shell">
       <div className="relative z-10 mb-4 flex flex-col items-center">
-        <h2 className="text-[34px] font-black text-brand-black">Updates</h2>
+          <h2 className="text-[34px] font-black text-brand-black">Updates</h2>
         <p className="mt-1 max-w-[300px] text-[13px] font-medium text-brand-black">
           review recent activity, notes, time, and last known place
         </p>
@@ -202,8 +241,18 @@ export default function TrustedCircleFeed({
           aria-label="Open camera"
         >
           <Camera className="h-5 w-5" />
-        </button>
+          </button>
       </div>
+
+      <section className="lmk-panel relative z-10 mb-3 p-3 text-center">
+        <div className="mb-2 flex items-center justify-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-forest" />
+          <h3 className="text-sm font-black text-brand-black">Last seen story mode</h3>
+        </div>
+        <p className="mx-auto max-w-[300px] text-[11px] font-bold text-brand-black/68">
+          Trusted people tap through Updates with context like time, note, and last known place.
+        </p>
+      </section>
 
       <div className="relative z-10 mb-3 flex gap-1.5">
         {updates.map((update, index) => (
@@ -294,11 +343,11 @@ export default function TrustedCircleFeed({
           <div className="absolute inset-x-0 bottom-0 p-4 text-white">
             <div className="mb-2 flex min-w-0 items-center gap-1.5 text-xs font-black">
               <MapPin className="h-3.5 w-3.5 shrink-0 text-yellow-orange" />
-              <span className="truncate">{active.landmark}</span>
+              <span className="truncate">{getVisiblePlace(active)}</span>
             </div>
             <p className="text-xl font-black">{active.note}</p>
             <p className="mt-2 rounded-full bg-white/18 px-3 py-1.5 text-[10px] font-bold backdrop-blur">
-              Last known: {active.landmark} · {active.exactTime}
+              Last known: {getVisiblePlace(active)} · {active.exactTime}
             </p>
             {active.detail && (
               <p className="mt-2 rounded-full bg-white/20 px-3 py-1.5 text-[10px] font-bold backdrop-blur">
@@ -308,6 +357,65 @@ export default function TrustedCircleFeed({
           </div>
         </div>
       </section>
+
+      {active.mine && (
+        <section className="lmk-panel relative z-10 mt-3 p-3 text-left">
+          <div className="mb-2 flex items-center justify-center gap-2 text-center">
+            <Lock className="h-4 w-4 text-forest" />
+            <h3 className="text-sm font-black text-brand-black">Privacy for this Update</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onUpdatePrivacy(active.id, { visibility: active.visibility === 'only_me' ? 'circle' : 'only_me' })}
+              className={`lmk-tap flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-black ${
+                active.visibility === 'only_me' ? 'bg-brand-black text-white' : 'bg-white/82 text-brand-black'
+              }`}
+            >
+              {active.visibility === 'only_me' ? <Lock className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
+              {active.visibility === 'only_me' ? 'only me' : 'circle'}
+            </button>
+            <button
+              type="button"
+              onClick={() => onUpdatePrivacy(active.id, { hideLocation: !active.hideLocation })}
+              className={`lmk-tap flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-black ${
+                active.hideLocation ? 'bg-pink-accent/75 text-brand-black' : 'bg-white/82 text-brand-black'
+              }`}
+            >
+              <EyeOff className="h-3.5 w-3.5" />
+              {active.hideLocation ? 'location hidden' : 'location visible'}
+            </button>
+          </div>
+        </section>
+      )}
+
+      {active.attachedLocation && !active.hideLocation && (
+        <section className="lmk-panel relative z-10 mt-3 overflow-hidden p-2 text-left">
+          {active.attachedLocation.staticMapUrl ? (
+            <img
+              src={active.attachedLocation.staticMapUrl}
+              alt="Google Maps preview of this update location"
+              className="h-32 w-full rounded-[28px] object-cover"
+            />
+          ) : (
+            <div className="flex h-32 flex-col items-center justify-center rounded-[28px] bg-white/68 px-4 text-center shadow-inner">
+              <MapPin className="mb-2 h-5 w-5 text-forest" />
+              <p className="text-xs font-black text-brand-black">Google Maps location attached</p>
+              <p className="mt-1 max-w-[260px] text-[10px] font-bold text-brand-black/65">
+                {active.attachedLocation.label}
+              </p>
+            </div>
+          )}
+          <a
+            href={active.attachedLocation.googleMapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 flex items-center justify-center rounded-full bg-light-green/80 px-4 py-2 text-[10px] font-black text-forest"
+          >
+            Open in Google Maps
+          </a>
+        </section>
+      )}
 
       <div className="relative z-10 mt-4 grid grid-cols-2 gap-2">
         <button
@@ -326,6 +434,71 @@ export default function TrustedCircleFeed({
         </button>
       </div>
 
+      <section className="lmk-panel relative z-10 mt-4 p-4 text-left">
+        <div className="mb-3 flex items-center justify-center gap-2 text-center">
+          <Sparkles className="h-4 w-4 text-yellow-orange" />
+          <h3 className="text-sm font-black text-brand-black">AI recap timeline</h3>
+        </div>
+        <p className="mb-3 text-center text-[11px] font-bold text-brand-black/68">
+          What happened today, generated from photos, notes, timestamps, and places.
+        </p>
+        {aiTimeline.length > 0 ? (
+          <div className="space-y-2">
+            {aiTimeline.map((item) => (
+              <div key={`${item.time}-${item.note}`} className="lmk-timeline-item rounded-[22px] bg-white/72 px-3 py-2 shadow-inner">
+                <div className="mb-1 flex items-center gap-2 text-[10px] font-black text-forest/75">
+                  <Clock3 className="h-3.5 w-3.5" />
+                  <span>{item.time}</span>
+                  <span className="ml-auto truncate">{item.place}</span>
+                </div>
+                <p className="text-xs font-bold text-brand-black/78">{item.note}</p>
+                {item.context && (
+                  <p className="mt-1 flex items-center gap-1 text-[10px] font-black text-brand-black/55">
+                    <Route className="h-3.5 w-3.5 text-forest" />
+                    {item.context}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-xs font-bold text-brand-black/70">
+            Post a few Updates and LMK will summarize your day here.
+          </p>
+        )}
+      </section>
+
+      <section className="lmk-panel relative z-10 mt-3 p-4 text-left">
+        <div className="mb-3 flex items-center justify-center gap-2 text-center">
+          <ShieldCheck className="h-4 w-4 text-forest" />
+          <h3 className="text-sm font-black text-brand-black">Trusted contact view</h3>
+        </div>
+        {latestCircleVisible ? (
+          <div className="grid grid-cols-[74px_1fr] gap-3 rounded-[26px] bg-white/68 p-3 shadow-inner">
+            <img src={latestCircleVisible.photoUrl} alt="Latest visible update" className="h-[92px] w-[74px] rounded-[22px] object-cover" />
+            <div className="min-w-0">
+              <p className="text-sm font-black text-brand-black">Latest visible Update</p>
+              <p className="mt-1 text-xs font-bold text-brand-black/72">{latestCircleVisible.exactTime} · {latestCircleVisible.note}</p>
+              <p className="mt-2 text-[10px] font-black text-forest/72">
+                Last known: {getVisiblePlace(latestCircleVisible)}
+              </p>
+              {latestCircleVisible.extractedContext?.vehiclePlate && (
+                <p className="mt-1 text-[10px] font-black text-brand-black/58">
+                  Plate: {latestCircleVisible.extractedContext.vehiclePlate}
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-[26px] bg-white/68 p-3 text-center shadow-inner">
+            <p className="text-sm font-black text-brand-black">No circle-visible Updates</p>
+            <p className="mx-auto mt-1 max-w-[260px] text-xs font-bold text-brand-black/72">
+              Updates marked only me stay out of trusted contact review.
+            </p>
+          </div>
+        )}
+      </section>
+
       <section className="lmk-panel relative z-10 mt-5 p-4 text-left">
         <div className="mb-3 flex items-center justify-center gap-2 text-center">
           <Sparkles className="h-4 w-4 text-yellow-orange" />
@@ -340,7 +513,7 @@ export default function TrustedCircleFeed({
               {todayUpdates.slice(0, 3).map((update) => `${update.exactTime}: ${update.note}`).join(' · ')}
             </p>
             <p className="text-[10px] font-black text-forest/70">
-              Last known: {todayUpdates[0]?.landmark || 'not tagged'}
+              Last known: {todayUpdates[0] ? getVisiblePlace(todayUpdates[0]) : 'not tagged'}
             </p>
           </div>
         ) : (
@@ -403,6 +576,9 @@ export default function TrustedCircleFeed({
                   <p className="text-[10px] font-black text-forest/75">{entry.exactTime}</p>
                   <p className="mt-0.5 text-xs font-bold text-brand-black/76">{entry.note}</p>
                   <p className="mt-1 text-[10px] font-black text-brand-black/58">Last known: {entry.place}</p>
+                  {entry.context && (
+                    <p className="mt-1 text-[10px] font-black text-brand-black/48">{entry.context}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -487,21 +663,55 @@ function buildFriendRecaps(friendsUpdates: MockUpdate[]) {
       acc[update.friendName].days.push(day);
     }
 
+    const place = update.hideLocation
+      ? 'location hidden'
+      : update.attachedLocation?.label || update.landmark;
     acc[update.friendName].updateCount += 1;
-    acc[update.friendName].places.push(update.landmark);
+    acc[update.friendName].places.push(place);
     acc[update.friendName].notes.push(update.note);
     acc[update.friendName].exactTimes.push(update.timestamp ? formatDateTime(update.timestamp) : update.timeAgo);
     day.entries.push({
       note: update.note,
-      place: update.landmark,
+      place,
       exactTime: update.timestamp ? formatDateTime(update.timestamp) : update.timeAgo,
       relativeTime: update.timeAgo,
+      context: formatSmartContext(update.extractedContext),
     });
 
     return acc;
   }, {});
 
   return Object.values(grouped);
+}
+
+function buildAiTimeline(updates: CircleUpdate[]): AiTimelineItem[] {
+  return updates
+    .filter((update) => update.visibility !== 'only_me')
+    .slice(0, 5)
+    .map((update) => ({
+      time: update.exactTime,
+      note: update.extractedContext?.cleanedNote || update.note,
+      place: getVisiblePlace(update),
+      context: formatSmartContext(update.extractedContext),
+    }));
+}
+
+function getVisiblePlace(update: Pick<CircleUpdate, 'hideLocation' | 'attachedLocation' | 'landmark'>) {
+  if (update.hideLocation) return 'location hidden';
+  return update.attachedLocation?.label || update.landmark || 'not tagged';
+}
+
+function formatSmartContext(context?: CircleUpdate['extractedContext']) {
+  if (!context) return undefined;
+
+  const parts = [
+    context.activity,
+    context.destination ? `to ${context.destination}` : undefined,
+    context.vehiclePlate ? `plate ${context.vehiclePlate}` : undefined,
+    context.people?.length ? `with ${context.people.join(', ')}` : undefined,
+  ].filter(Boolean);
+
+  return parts.length ? parts.join(' · ') : undefined;
 }
 
 function getUpdateTime(update: MockUpdate) {

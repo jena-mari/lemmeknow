@@ -14,12 +14,27 @@ export interface Contact {
 }
 
 export type LocationSharingOption = 'precise' | 'approximate' | 'landmark_only';
+export type UpdateVisibility = 'circle' | 'only_me';
+
+export interface AttachedLocation {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  label: string;
+  capturedAt: string;
+  googleMapsUrl: string;
+  staticMapUrl?: string;
+}
 
 export interface CheckIn {
   id: string;
   timestamp: string; // ISO String or user-friendly string
   photoUrl: string;
   landmark: string;
+  attachedLocation?: AttachedLocation;
+  hideLocation?: boolean;
+  visibility?: UpdateVisibility;
+  extractedContext?: SmartContext;
   locationSharingOption?: LocationSharingOption;
   preciseCoordinates?: string;
   approximateRegion?: string;
@@ -28,6 +43,15 @@ export interface CheckIn {
     plates: string;
     model: string;
   };
+}
+
+export interface SmartContext {
+  activity?: string;
+  destination?: string;
+  vehiclePlate?: string;
+  transitMode?: string;
+  people?: string[];
+  cleanedNote?: string;
 }
 
 export interface MockUpdate {
@@ -39,6 +63,10 @@ export interface MockUpdate {
   timeAgo: string;
   reason: string;
   landmark: string;
+  attachedLocation?: AttachedLocation;
+  hideLocation?: boolean;
+  visibility?: UpdateVisibility;
+  extractedContext?: SmartContext;
   note: string;
   photoUrl: string;
   transportText?: string;

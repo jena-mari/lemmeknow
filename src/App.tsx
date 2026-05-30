@@ -79,6 +79,12 @@ export default function App() {
     setUpdates((prev) => prev.filter((update) => update.id !== id));
   };
 
+  const handleUpdatePrivacy = (id: string, changes: { hideLocation?: boolean; visibility?: 'circle' | 'only_me' }) => {
+    setUpdates((prev) => prev.map((update) => (
+      update.id === id ? { ...update, ...changes } : update
+    )));
+  };
+
   if (!hasOnboarded) {
     return (
       <IosWrapper>
@@ -135,6 +141,7 @@ export default function App() {
             contacts={contacts}
             onOpenCamera={() => setActiveTab('camera')}
             onDeleteUpdate={handleDeleteUpdate}
+            onUpdatePrivacy={handleUpdatePrivacy}
           />
         )}
 
