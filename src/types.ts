@@ -9,6 +9,7 @@ export interface Contact {
   phone: string;
   avatarColor: string; // Tailwind class background
   initials: string;
+  source?: 'contacts' | 'instagram' | 'messenger' | 'manual';
   isCustom?: boolean;
 }
 

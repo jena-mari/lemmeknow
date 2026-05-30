@@ -78,7 +78,7 @@ export default function CircleManagement({
       </div>
 
       <p className="text-xs text-forest/75 leading-relaxed bg-azure/20 p-2.5 rounded-2xl border border-azure/40">
-        🔒 <strong>Anti-Surveillance Rule:</strong> These trusted contacts are the <em>only</em> people who can see your safety updates. No cloud tracking feed, no public sharing, and no continuous passive location mapping.
+        🔒 <strong>Private by default:</strong> These are the only people who can see your LMK updates. No public feed, no follower count, and no always-on social broadcasting.
       </p>
 
       {/* Contact List */}

@@ -100,7 +100,7 @@ export default function StartSessionForm({
       locationSharingOption: locationOption,
       preciseCoordinates: preciseCoords,
       approximateRegion: approxRegion,
-      initialNote: initialNote.trim() || 'Starting late transit safe-check.',
+      initialNote: initialNote.trim() || 'Starting a private update loop.',
       transportDetails: {
         plates: plates.trim().toUpperCase() || 'ABC123',
         model: model.trim() || 'Honda Civic (White)'
@@ -116,13 +116,13 @@ export default function StartSessionForm({
       <div className="text-left space-y-1">
         <div className="flex items-center gap-1.5 text-[10px] text-forest/70 font-mono tracking-wide uppercase">
           <Navigation className="w-3.5 h-3.5 animate-pulse text-yellow-orange fill-yellow-orange/20" />
-          <span>LMK Anti-Surveillance Shell</span>
+          <span>LMK private update setup</span>
         </div>
         <h2 className="font-serif text-xl font-extrabold tracking-tight text-forest leading-tight">
           Where are you heading?
         </h2>
         <p className="text-[11px] text-forest/60">
-          Set your timer and photo check-in intervals. No background location snooping.
+          Set an optional snap nudge and choose what location context gets attached.
         </p>
       </div>
 
@@ -132,7 +132,7 @@ export default function StartSessionForm({
         <div className="space-y-1">
           <h4 className="text-xs font-bold text-forest uppercase tracking-wide">Prefill Wollongong Demo</h4>
           <p className="text-[10px] text-forest/80 leading-relaxed">
-            Quickly preload student's Wollongong late-night Uber credentials to show off the snapping photo MVP instantly.
+            Quickly preload a Crown Street rideshare context to demo private snap updates.
           </p>
           <button
             type="button"
@@ -226,7 +226,7 @@ export default function StartSessionForm({
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="e.g. Safe jogging 🏃‍♀️, Walking home solo..."
+              placeholder="e.g. Hackathon, Uni day, Walking home..."
               value={newReasonName}
               onChange={(e) => setNewReasonName(e.target.value)}
               className="flex-1 p-2 bg-white border border-forest/10 rounded-xl text-xs text-forest focus:outline-none"
@@ -254,7 +254,7 @@ export default function StartSessionForm({
           </div>
 
           <p className="text-[10px] text-forest/60">
-            Choose what level of geographic data is packaged with your BeReal selfie checks:
+            Choose what level of location context is attached to your private snaps:
           </p>
 
           <div className="grid grid-cols-3 gap-2 pt-1 font-sans">
@@ -305,7 +305,7 @@ export default function StartSessionForm({
           </div>
 
           <div className="p-2 bg-cloud/50 rounded-xl text-[9px] text-forest/70 font-mono">
-            {locationOption === 'precise' && "🌐 Precise: Exact GPS signal is shared ONLY when overdue alarms trigger (protects from passive stalkers)."}
+            {locationOption === 'precise' && "🌐 Precise: exact GPS can be attached to updates you choose to post."}
             {locationOption === 'approximate' && "📍 Blue Ring: Circle sees Wollongong neighborhood center radius, but not your precise lane or building coordinates."}
             {locationOption === 'landmark_only' && "🏡 Text-Only: Zero background location checks. Trusted circle sees only your typed 'Departure Landmark' parameter."}
           </div>
@@ -315,7 +315,7 @@ export default function StartSessionForm({
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-forest uppercase tracking-wider flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />
-            <span>Check-In Recurrence / Interval</span>
+            <span>Snap nudge interval</span>
           </label>
           <div className="grid grid-cols-4 gap-2">
             {intervals.map((duration) => {
@@ -397,7 +397,7 @@ export default function StartSessionForm({
           className="w-full py-4 bg-forest text-white rounded-3xl font-bold text-sm tracking-wide transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer pt-3 pb-3 mt-1 bg-gradient-to-r from-forest to-[#1c5f35]"
           id="btn-active-session-start"
         >
-          <span>Activate Safety Session</span>
+          <span>Start Private Update Loop</span>
         </button>
       </form>
     </div>

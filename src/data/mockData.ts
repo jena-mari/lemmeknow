@@ -36,7 +36,7 @@ export const MOCK_FRIENDS_UPDATES: MockUpdate[] = [
     timeAgo: '45m ago',
     reason: 'Night Out',
     landmark: 'The Ritz Cocktail Bar',
-    note: 'Walking with Sarah now. Staying in a group. Next check-in is set for midnight!',
+    note: 'walking with Sarah now, tiny night-out update',
     photoUrl: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=400&q=80',
     status: 'safe'
   },

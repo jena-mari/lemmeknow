@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckIn, MockUpdate, SafetySession, EscalationState } from '../types';
 import { MOCK_FRIENDS_UPDATES } from '../data/mockData';
-import { MapPin, MessageCircle, Heart, Share2, Shield, Eye, Clock, Car, FlameKindling, Info, Sparkles, UserX, AlertTriangle } from 'lucide-react';
+import { MapPin, MessageCircle, Heart, Eye, FlameKindling, Info, Sparkles } from 'lucide-react';
 
 interface TrustedCircleFeedProps {
   userCheckIns: CheckIn[];
@@ -49,21 +49,21 @@ export default function TrustedCircleFeed({
         </span>
       </div>
 
-      {/* MISSING CHECKIN ALERT PANEL INSIDE CIRCLE FEED (Visible if Overdue) */}
+      {/* Gentle quiet-state panel for optional timers */}
       {activeSession && escalationState !== 'SAFE' && (
         <div className="p-4 bg-pink-accent/25 border-2 border-pink-accent rounded-3xl space-y-3 text-left animate-fadeIn shadow-2sm" id="escalation-alert-box">
           <div className="flex items-start gap-2.5">
             <div className="p-1 rounded-lg bg-pink-accent text-forest mt-0.5 shrink-0">
-              <AlertTriangle className="w-4 h-4 text-red-700 animate-bounce" />
+              <Sparkles className="w-4 h-4 text-forest" />
             </div>
             <div className="space-y-1">
-              <h4 className="text-xs font-bold text-red-950 uppercase tracking-wider">
-                Overdue Safety Alert!
+              <h4 className="text-xs font-bold text-forest uppercase tracking-wider">
+                Quiet for now
               </h4>
               <p className="text-[11px] text-[#2c0e13] leading-relaxed">
-                {escalationState === 'REMINDER_SENT' && "You haven't posted your scheduled check-in. Reminder is sent to your screen, but not your circle yet."}
-                {escalationState === 'CIRCLE_NOTIFIED' && "Your trusted circle has been alerted that you are 5m overdue! They see option to call your phone directly."}
-                {escalationState === 'ESCALATED' && "CRITICAL: You are 15m+ overdue. Circle members can now access your emergency plate records and view your absolute location coordinates."}
+                {escalationState === 'REMINDER_SENT' && "LMK sent a little reminder to post when you feel like it."}
+                {escalationState === 'CIRCLE_NOTIFIED' && "Your circle sees your latest shared update and can send a small nudge."}
+                {escalationState === 'ESCALATED' && "Your latest shared context is pinned so your circle does not need to scroll."}
               </p>
             </div>
           </div>
@@ -74,7 +74,7 @@ export default function TrustedCircleFeed({
               className="flex-1 py-2 bg-forest text-white hover:bg-forest/90 text-xs font-bold rounded-xl flex items-center justify-center gap-1 shadow-2xs"
             >
               <Info className="w-3.5 h-3.5 text-yellow-orange fill-yellow-orange/10" />
-              <span>View Emergency Card</span>
+              <span>View Update Details</span>
             </button>
             {onSendNudge && escalationState === 'CIRCLE_NOTIFIED' && (
               <button
@@ -90,13 +90,13 @@ export default function TrustedCircleFeed({
 
       {/* COMBINED FEEDS (Your feed in relation to your circle) */}
       <div className="space-y-4">
-        {/* User's Current Session Posts in Timeline */}
+        {/* User's current private update prompt */}
         {activeSession && userCheckIns.length === 0 && (
           <div className="p-5 bg-white rounded-3xl border border-forest/10 text-center space-y-2 py-6">
             <FlameKindling className="w-8 h-8 text-yellow-orange/70 mx-auto" />
-            <h4 className="font-semibold text-xs text-forest uppercase tracking-wide">Pending BeReal photo context</h4>
+            <h4 className="font-semibold text-xs text-forest uppercase tracking-wide">Ready for a private snap</h4>
             <p className="text-[11px] text-forest/60 max-w-xs mx-auto">
-              You started a safe session for <strong>{activeSession.reason}</strong>. Drop a photographic update right away to lock in your initial departure reference!
+              You started a nudge for <strong>{activeSession.reason}</strong>. Drop a quick photo update whenever it feels useful.
             </p>
           </div>
         )}
@@ -118,7 +118,7 @@ export default function TrustedCircleFeed({
                   <div className="font-bold text-xs text-forest flex items-center gap-1.5 leading-none">
                     <span>You (Late Travel Home)</span>
                     <span className="bg-azure text-forest/80 text-[8px] font-bold px-1.5 py-0.2 rounded">
-                      SAFE STATUS
+                      PRIVATE
                     </span>
                   </div>
                   <span className="text-[10px] text-forest/50 font-mono">
@@ -173,7 +173,7 @@ export default function TrustedCircleFeed({
                   </button>
                   <div className="flex items-center gap-1">
                     <MessageCircle className="w-4 h-4" />
-                    <span>Sarah: "Keep safe!"</span>
+                  <span>Sarah: "cute update"</span>
                   </div>
                 </div>
                 <button
@@ -181,7 +181,7 @@ export default function TrustedCircleFeed({
                   onClick={onOpenEmergencyCard}
                   className="text-forest hover:underline text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 cursor-pointer"
                 >
-                  <span>Info Card</span>
+                    <span>Details</span>
                 </button>
               </div>
             </div>
@@ -248,11 +248,11 @@ export default function TrustedCircleFeed({
                 <div className="flex gap-4">
                   <button type="button" className="flex items-center gap-1 hover:text-red-500 transition-colors">
                     <Heart className="w-4 h-4 hover:fill-red-500" />
-                    <span>Lobby Safe Nudge</span>
+                    <span>Send nudge</span>
                   </button>
                 </div>
                 <span className="text-[10px] bg-azure/40 text-forest px-2 py-0.5 rounded-md font-medium">
-                  Verified check-in
+                  Private update
                 </span>
               </div>
             </div>

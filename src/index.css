@@ -1,10 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Alte Haas Grotesk";
+  src: url("./public/AlteHaasGroteskRegular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alte Haas Grotesk";
+  src: url("./public/AlteHaasGroteskBold.ttf") format("truetype");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-serif: "Playfair Display", Georgia, serif;
-  --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-serif: "Alte Haas Grotesk", system-ui, -apple-system, sans-serif;
+  --font-sans: "Alte Haas Grotesk", system-ui, -apple-system, sans-serif;
+  --font-mono: "Alte Haas Grotesk", ui-monospace, SFMono-Regular, monospace;
   
   --color-azure: #cce6fc;
   --color-yellow-orange: #f9c94e;

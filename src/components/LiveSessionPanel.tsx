@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { SafetySession, EscalationState } from '../types';
 import { 
-  Clock, Shield, Car, CheckCircle2, AlertOctagon, HelpCircle, 
-  MapPin, Bell, ChevronRight, UserCheck, ShieldClose, AlertTriangle, Eye, FastForward
+  Clock, Shield, CheckCircle2, Sparkles,
+  MapPin, UserCheck, FastForward
 } from 'lucide-react';
 
 interface LiveSessionPanelProps {
@@ -53,21 +53,21 @@ export default function LiveSessionPanel({
           bg: 'bg-yellow-orange/10',
           progress: 'bg-yellow-orange',
           text: 'text-yellow-orange-dark',
-          label: 'State 1: Time Passed'
+          label: 'Nudge ready'
         };
       case 'CIRCLE_NOTIFIED':
         return {
           bg: 'bg-pink-accent/15',
           progress: 'bg-pink-accent',
-          text: 'text-red-700',
-          label: 'State 2: Friends Warning'
+          text: 'text-forest',
+          label: 'Quiet mode'
         };
       case 'ESCALATED':
         return {
-          bg: 'bg-red-50',
-          progress: 'bg-red-600',
-          text: 'text-red-800',
-          label: 'State 3: Fully Alerted'
+          bg: 'bg-pink-accent/10',
+          progress: 'bg-pink-accent',
+          text: 'text-forest',
+          label: 'Pinned context'
         };
     }
   };
@@ -77,10 +77,10 @@ export default function LiveSessionPanel({
   // Handle human-friendly timer message
   const getTimerSubMessage = () => {
     if (session.secondsRemaining > 0) {
-      return `Next check-in due in ${Math.ceil(session.secondsRemaining / 60)} mins`;
+      return `Next snap nudge in ${Math.ceil(session.secondsRemaining / 60)} mins`;
     } else {
       const overdueMins = Math.floor(Math.abs(session.secondsRemaining) / 60);
-      return `Delayed by ${overdueMins} mins`;
+      return `Quiet for ${overdueMins} mins`;
     }
   };
 
@@ -121,14 +121,14 @@ export default function LiveSessionPanel({
           id="btn-fast-checkin"
         >
           <CheckCircle2 className="w-4 h-4 text-yellow-orange fill-yellow-orange/10 animate-bounce" />
-          <span>Check-in Safe Now (BeReal Photo)</span>
+          <span>Post Private Snap</span>
         </button>
       </div>
 
-      {/* Safety Session Info Details */}
+      {/* Private update timer details */}
       <div className="p-3.5 bg-white rounded-3xl border border-forest/10 space-y-3 shadow-2sm text-left">
         <div className="font-bold text-[9px] text-forest/50 uppercase tracking-widest pb-1 border-b border-forest/5">
-          Transit Parameters
+          Optional Context
         </div>
         
         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -141,7 +141,7 @@ export default function LiveSessionPanel({
           </div>
 
           <div className="space-y-0.5">
-            <span className="text-forest/50 text-[10px]">Trusted Circle Interval</span>
+            <span className="text-forest/50 text-[10px]">Nudge Interval</span>
             <div className="font-semibold text-forest flex items-center gap-1 text-[11px]">
               <Clock className="w-3.5 h-3.5 text-forest/40 shrink-0" />
               <span>Every {session.intervalMinutes} minutes</span>
@@ -151,7 +151,7 @@ export default function LiveSessionPanel({
 
         {/* Location Security Mode Indicator */}
         <div className="pt-2 border-t border-forest/5 space-y-1">
-          <span className="text-forest/50 text-[10px] block">Anti-Surveillance Privacy Preference</span>
+          <span className="text-forest/50 text-[10px] block">Privacy Preference</span>
           <div className="p-2 bg-azure/40 rounded-xl flex items-center justify-between text-xs font-mono text-forest border border-forest/5">
             <div className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-forest/80 shrink-0" />
@@ -184,14 +184,14 @@ export default function LiveSessionPanel({
         )}
       </div>
 
-      {/* TIMED UPDATE ESCALATION PATH - 3 State Timeline */}
+      {/* Optional timed update path */}
       <div className="p-4 bg-white rounded-3xl border border-forest/10 space-y-3 shadow-2sm text-left">
         <div className="flex items-center justify-between">
           <h4 className="font-semibold text-xs text-forest/80 uppercase tracking-wider">
-            Private Check-in Escalation Flow
+            Gentle Nudge Flow
           </h4>
           <span className="text-[9px] bg-azure font-mono text-forest px-1.5 py-0.5 rounded-full">
-            Anti-Panic Policy
+            Low-pressure
           </span>
         </div>
 
@@ -204,55 +204,55 @@ export default function LiveSessionPanel({
             }`} />
             <div className="space-y-0.5">
               <div className="text-xs font-bold text-forest flex items-center gap-1.5 leading-none">
-                <span>State 1: Time Passed</span>
+                <span>Step 1: Personal nudge</span>
                 {session.secondsRemaining <= 0 && (
                   <span className="bg-yellow-orange/20 text-forest text-[8px] font-bold px-1.5 py-0.2 rounded font-mono">
-                    ACTIVE REMINDER
+                    ACTIVE
                   </span>
                 )}
               </div>
               <span className="text-[10px] text-forest/65 block">
-                Discrete haptic and popup reminder sent to your device. No alert is sent to anyone else.
+                A quiet reminder is shown on your device. Nothing public happens.
               </span>
             </div>
           </div>
 
-          {/* State 2: Notify circle */}
+          {/* State 2: Quiet circle state */}
           <div className="relative">
             <div className={`absolute -left-[21px] top-0 w-3 h-3 rounded-full border-2 border-white ${
               session.secondsRemaining <= -300 ? 'bg-pink-accent' : 'bg-neutral-200'
             }`} />
             <div className="space-y-0.5">
               <div className="text-xs font-bold text-forest flex items-center gap-1.5 leading-none">
-                <span>State 2: Circle Notified (+5 Min)</span>
+                <span>Step 2: Circle sees latest update</span>
                 {session.secondsRemaining <= -300 && (
                   <span className="bg-pink-accent text-forest text-[8px] font-bold px-1.5 py-0.2 rounded font-mono uppercase">
-                    Friends Warned
+                    Quiet
                   </span>
                 )}
               </div>
               <span className="text-[10px] text-forest/65 block">
-                A custom nudge is placed on friends' feed stating your update is overdue. Simple "nudge back" options exist to prompt you.
+                Your circle sees the last thing you shared and can send a small nudge.
               </span>
             </div>
           </div>
 
-          {/* State 3: Escalate */}
+          {/* State 3: Pin context */}
           <div className="relative">
             <div className={`absolute -left-[21px] top-0 w-3 h-3 rounded-full border-2 border-white ${
-              session.secondsRemaining <= -900 ? 'bg-red-500' : 'bg-neutral-200'
+              session.secondsRemaining <= -900 ? 'bg-pink-accent' : 'bg-neutral-200'
             }`} />
             <div className="space-y-0.5">
               <div className="text-xs font-bold text-forest flex items-center gap-1.5 leading-none">
-                <span>State 3: Fully Overdue (+15 Min)</span>
+                <span>Step 3: Pin latest context</span>
                 {session.secondsRemaining <= -900 && (
                   <span className="bg-red-600 text-white text-[8px] font-bold px-1.5 py-0.2 rounded font-mono uppercase">
-                    ALERT ACTIVE
+                    PINNED
                   </span>
                 )}
               </div>
               <span className="text-[10px] text-forest/65 block">
-                Circle contacts are given direct access to export your Emergency Info Card containing latest photo and Uber details to present to first responders.
+                The latest photo, caption, location mode, and optional ride details stay easy to find.
               </span>
             </div>
           </div>
@@ -266,7 +266,7 @@ export default function LiveSessionPanel({
           <span>Demo Accelerator Tools</span>
         </div>
         <p className="text-[10px] text-forest/65 leading-relaxed">
-          Quickly advance time to witness exactly how LMK handles the 3 missed check-in stages without sitting around!
+          Quickly advance time to preview the gentle nudge states.
         </p>
         <div className="grid grid-cols-3 gap-2 pt-1">
           <button
@@ -290,15 +290,15 @@ export default function LiveSessionPanel({
         </div>
       </div>
 
-      {/* Safety Core Actions: Safe Exit & Help */}
+      {/* Optional controls */}
       <div className="flex gap-2 pt-1 font-sans">
         <button
           onClick={onTriggerEmergency}
           className="flex-1 py-3 bg-pink-accent hover:bg-[#ebabb7] text-forest font-bold text-xs rounded-2xl flex items-center justify-center gap-1.5 shadow-sm cursor-pointer border border-[#ebabb7]/40 shrink-0"
           id="btn-help-emergency"
         >
-          <AlertOctagon className="w-4 h-4 text-red-700 animate-pulse" />
-          <span>I Need Help!</span>
+          <Sparkles className="w-4 h-4 text-forest" />
+          <span>Open Danger Zone</span>
         </button>
 
         <button
@@ -307,7 +307,7 @@ export default function LiveSessionPanel({
           id="btn-wrap-session-safe"
         >
           <UserCheck className="w-4 h-4 text-yellow-orange" />
-          <span>I'm Safe, End Ride</span>
+          <span>Wrap Up</span>
         </button>
       </div>
     </div>
